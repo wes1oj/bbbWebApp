@@ -7,18 +7,13 @@ module.exports = app => {
   // Create a new User
   router.post("/singUp", users.create);
 
-  //!?
+  // Login
   router.post("/login", users.login);
 
-  router.get("/dashboard", users.auth, users.index);
-
+  // Create BBB url
   router.post("/createurl", users.auth, urls.createurl);
 
-  // Retrieve all Tutorials
-  //router.get("/", tutorials.findAll);
-
-  // Retrieve all published Tutorials
-  //router.get("/published", tutorials.findAllPublished);
+  router.post("/join", users.auth, urls.joinurl);
 
   // Retrieve a single Tutorial with id
   router.get("/:id", users.findOne);

@@ -1,89 +1,144 @@
 
-
+const db = require("../models");
 require('dotenv').config();
 const talan = require('./sha1');
+const Meeting = db.meetings;
+const bcrypt = require("bcrypt");
 
 exports.createurl = (req, res) => {
-    const flag = req.body.basicInfo;
 
-    if (flag == "true") {
-        const { basicInfo,
-            meetingName,
-            attendeePassword,
-            moderatorPassword } = req.body;
-        const meetingID = getMeetingID();
-        const param = createParam([meetingName,
-            attendeePassword,
-            moderatorPassword], meetingID);
-        hash = cheksum("create" + param);
-        const url = createMeetingURL(param, hash);
-        console.log(url);
-        res.status(200).send(url);
-    } else {
-        console.log(flag);
-        const { basicInfo,
-            meetingName,
-            attendeePassword,
-            moderatorPassword,
-            welcomeMessage,
-            maxParticipants,
-            record,
-            duration,
-            moderatorOnlyMessage,
-            autoStartRecording,
-            allowStartStopRecording,
-            webcamsOnlyForModerator,
-            bannerText,
-            muteOnStart,
-            allowModsToUnmuteUsers,
-            lockSettingsDisableCam,
-            lockSettingsDisableMic,
-            lockSettingsDisablePrivateChat,
-            lockSettingsDisablePublicChat,
-            lockSettingsDisableNote,
-            lockSettingsLockedLayout,
-            guestPolicy,
-            meetingKeepEvents,
-            endWhenNoModerator,
-            endWhenNoModeratorDelayInMinutes,
-            meetingLayout,
-            learningDashboardEnabled,
-            learningDashboardCleanupDelayInMinutes } = req.body;
-        console.log("extended");
-        const meetingID = getMeetingID();
-        const param = createOptionalParam([meetingName,
-            attendeePassword,
-            moderatorPassword,
-            welcomeMessage,
-            maxParticipants,
-            record,
-            duration,
-            moderatorOnlyMessage,
-            autoStartRecording,
-            allowStartStopRecording,
-            webcamsOnlyForModerator,
-            bannerText,
-            muteOnStart,
-            allowModsToUnmuteUsers,
-            lockSettingsDisableCam,
-            lockSettingsDisableMic,
-            lockSettingsDisablePrivateChat,
-            lockSettingsDisablePublicChat,
-            lockSettingsDisableNote,
-            lockSettingsLockedLayout,
-            guestPolicy,
-            meetingKeepEvents,
-            endWhenNoModerator,
-            endWhenNoModeratorDelayInMinutes,
-            meetingLayout,
-            learningDashboardEnabled,
-            learningDashboardCleanupDelayInMinutes], meetingID);
-        console.log(req.body);
-        hash = cheksum("create" + param);
-        const url = createMeetingURL(param, hash);
-        console.log(url);
-        res.status(200).send(url);
+    const { basicInfo,
+        meetingName,
+        attendeePassword,
+        moderatorPassword,
+        welcomeMessage,
+        maxParticipants,
+        record,
+        duration,
+        moderatorOnlyMessage,
+        autoStartRecording,
+        allowStartStopRecording,
+        webcamsOnlyForModerator,
+        bannerText,
+        muteOnStart,
+        allowModsToUnmuteUsers,
+        lockSettingsDisableCam,
+        lockSettingsDisableMic,
+        lockSettingsDisablePrivateChat,
+        lockSettingsDisablePublicChat,
+        lockSettingsDisableNote,
+        lockSettingsLockedLayout,
+        guestPolicy,
+        meetingKeepEvents,
+        endWhenNoModerator,
+        endWhenNoModeratorDelayInMinutes,
+        meetingLayout,
+        learningDashboardEnabled,
+        learningDashboardCleanupDelayInMinutes } = req.body;
+
+    if (basicInfo != undefined) {
+        Meeting.findOne({ where: { meetingName: meetingName } }).then(data => {
+            console.log(data + "data");
+            //console.log(meetingName + "meetingName");
+            //console.log(data.meetingName + "data.meetingName");
+            if (data === undefined || data == null) {
+                if (basicInfo == undefined) { console.log(basicInfo + "should be undefined"); }
+                else if (basicInfo == true) {
+                    console.log(basicInfo + "should be true");
+                    const meetingID = getMeetingID();
+                    const param = createParam([meetingName,
+                        attendeePassword,
+                        moderatorPassword], meetingID);
+                    hash = cheksum("create" + param);
+                    const url = createMeetingURL(param, hash);
+                    createMeetingRecord(meetingID, meetingName, moderatorPassword, attendeePassword);
+                    console.log(url);
+                    res.status(200).send(url);
+                } else {
+                    console.log(basicInfo + "should be false");
+                    const meetingID = getMeetingID();
+                    const param = createOptionalParam([meetingName,
+                        attendeePassword,
+                        moderatorPassword,
+                        welcomeMessage,
+                        maxParticipants,
+                        record,
+                        duration,
+                        moderatorOnlyMessage,
+                        autoStartRecording,
+                        allowStartStopRecording,
+                        webcamsOnlyForModerator,
+                        bannerText,
+                        muteOnStart,
+                        allowModsToUnmuteUsers,
+                        lockSettingsDisableCam,
+                        lockSettingsDisableMic,
+                        lockSettingsDisablePrivateChat,
+                        lockSettingsDisablePublicChat,
+                        lockSettingsDisableNote,
+                        lockSettingsLockedLayout,
+                        guestPolicy,
+                        meetingKeepEvents,
+                        endWhenNoModerator,
+                        endWhenNoModeratorDelayInMinutes,
+                        meetingLayout,
+                        learningDashboardEnabled,
+                        learningDashboardCleanupDelayInMinutes], meetingID);
+                    hash = cheksum("create" + param);
+                    const url = createMeetingURL(param, hash);
+                    createMeetingRecord(meetingID, meetingName, moderatorPassword, attendeePassword);
+                    console.log(url);
+                    res.status(200).send(url);
+                }
+            }
+            else {
+                res.status(409).send("Name alredy exists");
+            }
+        })
     }
+}
+
+
+
+function createMeetingRecord(meetingID, meetingName, moderatorPassword, attendeePassword) {
+    Promise.all([
+        bcrypt.hash(moderatorPassword, 10),  //nem kell
+        bcrypt.hash(attendeePassword, 10),]).then(data => {
+            const [mop, atp] = data;
+            const meeting = {
+                meetingId: meetingID,
+                meetingName: meetingName,
+                moPassword: mop,
+                atPassword: atp
+            };
+            //create user inside the data base
+            Meeting.create(meeting)
+                .then(() => {
+                    console.log("meeting record created");
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        })
+}
+
+exports.joinurl = (req, res) => {
+    const {
+        meetingName,
+        meetingId,
+        fullName,
+        password,
+    } = req.body;
+    if (meetingName == "" || fullName == "" || password == "" || meetingName === undefined || fullName === undefined || password === undefined) {
+        res.status(500);
+    } else {
+        if (meetingId) {
+
+        } else {
+
+        }
+    }
+    res.status(200);
 }
 
 function url_encode(a) {
@@ -118,5 +173,46 @@ function cheksum(param) {
 function createMeetingURL(param, hash) {
     var call = process.env.ENDPOINT + process.env.CREATEURL + param + "&checksum=" + hash;
     return call;
+}
+
+function joinMeeting(joinData) {//name,meetingName,password
+    var idhash = cheksum("getMeetings");
+    var meetingID = meetingIDFromName(joinData[1], idhash);
+    var param = joinParam(joinData, meetingID);
+    //document.write(param);
+    var hash = cheksum("join" + param);
+    var url = joinMeetingURL(param, hash);
+    //document.write(url);
+    httpGet(url);
+}
+
+// join
+function joinParam(array, meetingID) {
+    var arrayParam = url_encode(array);
+    var param = "fullName=" + arrayParam[0] + "&meetingID=" + meetingID + "&password=" + arrayParam[2];
+    return param;
+}
+
+function joinMeetingURL(param, hash) {
+    var call = endpoint + joinURL + param + "&checksum=" + hash;
+    return call;
+}
+
+function meetingIDFromName(meetingName, idhash) {
+    var call = endpoint + getMeetingURL + "&checksum=" + idhash;
+    var start = meetingName.length;
+    var end = 0;
+    var id = "";
+    let data = httpGet(call);
+    if ((data.includes("SUCCESS")) && (data.includes(meetingName))) {
+        start = start + data.indexOf(meetingName);
+        start = start + 26;
+        end = start + 40;
+        while (end > start) {
+            id = id + data.charAt(start);
+            start++;
+        }
+    }
+    return id;
 }
 

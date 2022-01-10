@@ -98,80 +98,64 @@ function Dashboard() {
   async function getData(e) {
     try {
       const basicInfo = (document.getElementById("Optional").disabled === true);
-      if (basicInfo) {
-        const BasicInfo = {
-          basicInfo,
-          meetingName,
-          attendeePassword,
-          moderatorPassword
-        };
-        fetch('/createurl', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(BasicInfo)
-        }).then((data) => {
-          if (data.status === 403) {
-            window.location.replace("/login");
-          } else {
-            fetch(data.url, {
-              method: 'post',
-            }).then(() => {
-              window.location.replace("/join");
-            });
-          }
-        });
+      const info = {
+        basicInfo,
+        meetingName,
+        attendeePassword,
+        moderatorPassword,
+        welcomeMessage,
+        maxParticipants,
+        record,
+        duration,
+        moderatorOnlyMessage,
+        autoStartRecording,
+        allowStartStopRecording,
+        webcamsOnlyForModerator,
+        bannerText,
+        muteOnStart,
+        allowModsToUnmuteUsers,
+        lockSettingsDisableCam,
+        lockSettingsDisableMic,
+        lockSettingsDisablePrivateChat,
+        lockSettingsDisablePublicChat,
+        lockSettingsDisableNote,
+        lockSettingsLockedLayout,
+        guestPolicy,
+        meetingKeepEvents,
+        endWhenNoModerator,
+        endWhenNoModeratorDelayInMinutes,
+        meetingLayout,
+        learningDashboardEnabled,
+        learningDashboardCleanupDelayInMinutes
+      };
+      fetch('/createurl', {
+        method: 'post',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(info)
+      }).then(function (response) {
+        return response.text();
+      }).then(function (data, status) {
+        if (data == "Name alredy exists") {
+          document.getElementById('inner').innerHTML = data;
+        } else {
+          document.getElementById('inner').innerHTML = "fetch=>" + data;
+          /*
+          fetch(data, {
+                   method: 'post',
+                 }).then(() => {
+                   window.location.replace("/join");
+                 });
+          */
+          window.location.replace("/join");
+        }
 
-      } else {
-        const ExtendedInfo = {
-          basicInfo,
-          meetingName,
-          attendeePassword,
-          moderatorPassword,
-          welcomeMessage,
-          maxParticipants,
-          record,
-          duration,
-          moderatorOnlyMessage,
-          autoStartRecording,
-          allowStartStopRecording,
-          webcamsOnlyForModerator,
-          bannerText,
-          muteOnStart,
-          allowModsToUnmuteUsers,
-          lockSettingsDisableCam,
-          lockSettingsDisableMic,
-          lockSettingsDisablePrivateChat,
-          lockSettingsDisablePublicChat,
-          lockSettingsDisableNote,
-          lockSettingsLockedLayout,
-          guestPolicy,
-          meetingKeepEvents,
-          endWhenNoModerator,
-          endWhenNoModeratorDelayInMinutes,
-          meetingLayout,
-          learningDashboardEnabled,
-          learningDashboardCleanupDelayInMinutes
-        };
-        fetch('/createurl', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(ExtendedInfo)
-        }).then((data) => {
-          if (data.status === 403) {
-            window.location.replace("/login");
-          } else {
-            fetch(data.url, {
-              method: 'post',
-            }).then(() => {
-              window.location.replace("/join");
-            });
-          }
-        });
-      }
+      });
+
     } catch (err) {
       console.log(err);
     }
   }
+
 
   return (
     <>
@@ -207,6 +191,7 @@ function Dashboard() {
           /><br></br>
         </form>
         <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
+        <h1 id="inner"></h1>
         <h2>Optional settings</h2>
         <button onClick={(e) => enable(e.target.value)}>Enable optional settings</button>
         <fieldset id="Optional" disabled>
@@ -582,9 +567,9 @@ function SingUp() {
 
 function JoinMeeting() {
 
-  const [meetingName, setmeetingName] = useState("Test");
+  const [meetingName, setmeetingName] = useState("");
   const [meetingId, setmeetingId] = useState("");
-  const [fullName, setfullName] = useState("U Shoud set your name");
+  const [fullName, setfullName] = useState("");
   const [password, setPassword] = useState("");
 
   async function join(e) {
@@ -596,14 +581,22 @@ function JoinMeeting() {
         fullName,
         password,
       };
-      fetch('/join', {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(joinData)
-      }).then(() => {
-
-      })
-
+      if (meetingName == "" || fullName == "" || password == "") {
+        document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
+      } else {
+        fetch('/join', {
+          method: 'post',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(joinData)
+        }).then((data) => {
+          if (data.status === 200) {
+            document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
+            // join link needed
+          } else {
+            window.location.replace("/login");
+          }
+        })
+      }
     } catch (err) {
       console.log(err.data);
     }
@@ -655,6 +648,7 @@ function JoinMeeting() {
           </label><br></br>
           <input type="submit" />
         </form>
+        <h1 id="inner"></h1>
       </section>
     </>
   );

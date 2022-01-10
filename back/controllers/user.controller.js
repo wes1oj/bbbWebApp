@@ -96,7 +96,7 @@ exports.create = (req, res) => {
         .catch(err => {
           res.status(500).send({
             message:
-              err.message || "Some error occurred while creating the Tutorial."
+              err.message || "Some error occurred while creating the User."
           });
         });
 
@@ -129,27 +129,27 @@ exports.findOne = (req, res) => {
     })
     .catch(err => {
       res.status(500).send({
-        message: "Error retrieving Tutorial with email=" + email
+        message: "Error retrieving User with email=" + email
       });
     });
 };
 
-
+/*
 exports.index = (req, res) => {
   if (!req.headers.cookie) {
     res.status().send({
       message: "cookies not arrived"
     });
   } else {
-    /*res.status(200).send({
+   res.status(200).send({
       message: "bent"
     });
     console.log(`${__dirname}/index.html`);
     res.sendFile('/home/attila/Dokumentumok/SafeSave/ATI_MENTÉSE/Egyetem/9.flv/szakdolgozat_node_trys/project5/back/secretpages/index.html');
-    */
+
   }
 };
-
+*/
 function createToken(email) {
   var newtoken = jwt.sign({ email: email }, secret, { expiresIn: '15m' });
   return newtoken;

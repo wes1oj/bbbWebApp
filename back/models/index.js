@@ -21,6 +21,7 @@ db.sequelize = sequelize;
 
 db.users = require("./user.model")(sequelize, Sequelize);
 db.refreshTokens = require("./refresh.model")(sequelize, Sequelize);
+db.meetings = require("./meeting.model")(sequelize, Sequelize);
 /*
 never worked
 db.refreshTokens.belongsTo(db.users, {

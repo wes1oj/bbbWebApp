@@ -15,6 +15,8 @@ module.exports = app => {
 
   router.post("/join", users.auth, urls.joinurl);
 
+  router.get("/logout", users.logout);
+
   // Retrieve a single Tutorial with id
   router.get("/:id", users.findOne);
 

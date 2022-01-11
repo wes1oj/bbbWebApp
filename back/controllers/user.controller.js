@@ -197,7 +197,7 @@ function managerefresh(str) {
 
 exports.auth = (req, res, next) => {
   if (!req.headers.cookie) {
-    res.redirect(403, "/login");
+    res.status(403).send("You should log in first");
   } else {
     //console.log(req.headers.cookie);
     var str = req.headers.cookie.split(" ")[0];
@@ -224,4 +224,19 @@ exports.auth = (req, res, next) => {
       }
     });
   }
+};
+
+exports.logout = (req, res) => {
+  var str = req.headers.cookie;
+  var tokentrim = str.substring(
+    str.indexOf(";") + 15,
+    str.length,
+  );
+  RefreshToken.destroy({ where: { token: tokentrim } }).then(() => {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(200).send("deleted");
+  });
+
+
 };

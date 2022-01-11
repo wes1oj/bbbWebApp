@@ -94,6 +94,17 @@ function Dashboard() {
     }
   }
 
+  async function logout(e) {
+    fetch('/logout', {
+      method: 'get',
+    }).then(function (response) {
+      return response.text();
+    }).then(function (data) {
+      localStorage.clear();
+      window.location.replace('/login');
+    });
+  }
+
   //read from form;
   async function getData(e) {
     try {
@@ -128,6 +139,7 @@ function Dashboard() {
         learningDashboardEnabled,
         learningDashboardCleanupDelayInMinutes
       };
+
       fetch('/createurl', {
         method: 'post',
         headers: { 'content-type': 'application/json' },
@@ -135,7 +147,7 @@ function Dashboard() {
       }).then(function (response) {
         return response.text();
       }).then(function (data) {
-        if (data === "Name alredy exists") {
+        if (data === "Name alredy exists" || data === "You should log in first") {
           document.getElementById('inner').innerHTML = data;
         } else {
           //document.getElementById('inner').innerHTML = "fetch=>" + data;
@@ -157,7 +169,7 @@ function Dashboard() {
     <>
       <section>
         <form>
-
+          <button onClick={(e) => logout(e.target.value)}>Logout</button>
           <label>Name for the meeting:</label><br></br>
           <input
             autoComplete="off"
@@ -563,10 +575,22 @@ function SingUp() {
 
 function JoinMeeting() {
 
+
   const [meetingName, setmeetingName] = useState("");
   const [meetingId, setmeetingId] = useState("");
   const [fullName, setfullName] = useState("");
   const [password, setPassword] = useState("");
+
+  async function logout(e) {
+    fetch('/logout', {
+      method: 'get',
+    }).then(function (response) {
+      return response.text();
+    }).then(function (data) {
+      localStorage.clear();
+      window.location.replace('/login');
+    });
+  }
 
   async function join(e) {
     e.preventDefault();
@@ -587,7 +611,7 @@ function JoinMeeting() {
         }).then(function (response) {
           return response.text();
         }).then(function (data) {
-          if (data[0] === "I") {//incorrect
+          if (data[0] === "I" || data === "You should log in first") {//incorrect
             document.getElementById('inner').innerHTML = data;
           } else {
             window.location.replace(data);
@@ -609,6 +633,7 @@ function JoinMeeting() {
   return (
     <>
       <section>
+        <button onClick={(e) => logout(e.target.value)}>Logout</button>
         <form onSubmit={join}>
           <label>Meeting name:
             <input

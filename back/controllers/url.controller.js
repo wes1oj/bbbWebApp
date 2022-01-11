@@ -133,12 +133,33 @@ exports.joinurl = (req, res) => {
         res.status(500);
     } else {
         if (meetingId) {
+            Meeting.findOne({ where: { meetingId: meetingId } }).then(data => {
+                if (data === undefined || data == null) {
+                    res.status(409).send("Incorrect meeting ID");
+                } else {
 
+                    const param = joinParam(meetingId, [fullName, password]);
+                    const hash = cheksum("join" + param);
+                    const url = joinMeetingURL(param, hash);
+                    res.status(200).send(url)
+
+                }
+            });
         } else {
+            Meeting.findOne({ where: { meetingName: meetingName } }).then(data => {
+                if (data === undefined || data == null) {
+                    res.status(409).send("Incorrect meeting Meeting Name");
+                } else {
 
+                    const param = joinParam(data.meetingId, [fullName, password]);
+                    const hash = cheksum("join" + param);
+                    const url = joinMeetingURL(param, hash);
+                    res.status(200).send(url)
+
+                }
+            });
         }
     }
-    res.status(200);
 }
 
 function url_encode(a) {
@@ -175,44 +196,16 @@ function createMeetingURL(param, hash) {
     return call;
 }
 
-function joinMeeting(joinData) {//name,meetingName,password
-    var idhash = cheksum("getMeetings");
-    var meetingID = meetingIDFromName(joinData[1], idhash);
-    var param = joinParam(joinData, meetingID);
-    //document.write(param);
-    var hash = cheksum("join" + param);
-    var url = joinMeetingURL(param, hash);
-    //document.write(url);
-    httpGet(url);
-}
-
 // join
-function joinParam(array, meetingID) {
+function joinParam(meetingID, array) {
     var arrayParam = url_encode(array);
-    var param = "fullName=" + arrayParam[0] + "&meetingID=" + meetingID + "&password=" + arrayParam[2];
+    var param = "fullName=" + arrayParam[0] + "&meetingID=" + meetingID + "&password=" + arrayParam[1];
     return param;
 }
 
 function joinMeetingURL(param, hash) {
-    var call = endpoint + joinURL + param + "&checksum=" + hash;
+    var call = process.env.ENDPOINT + process.env.JOINURL + param + "&checksum=" + hash;
     return call;
 }
 
-function meetingIDFromName(meetingName, idhash) {
-    var call = endpoint + getMeetingURL + "&checksum=" + idhash;
-    var start = meetingName.length;
-    var end = 0;
-    var id = "";
-    let data = httpGet(call);
-    if ((data.includes("SUCCESS")) && (data.includes(meetingName))) {
-        start = start + data.indexOf(meetingName);
-        start = start + 26;
-        end = start + 40;
-        while (end > start) {
-            id = id + data.charAt(start);
-            start++;
-        }
-    }
-    return id;
-}
 

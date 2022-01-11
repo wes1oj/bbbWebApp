@@ -134,21 +134,17 @@ function Dashboard() {
         body: JSON.stringify(info)
       }).then(function (response) {
         return response.text();
-      }).then(function (data, status) {
-        if (data == "Name alredy exists") {
+      }).then(function (data) {
+        if (data === "Name alredy exists") {
           document.getElementById('inner').innerHTML = data;
         } else {
-          document.getElementById('inner').innerHTML = "fetch=>" + data;
-          /*
+          //document.getElementById('inner').innerHTML = "fetch=>" + data;
           fetch(data, {
-                   method: 'post',
-                 }).then(() => {
-                   window.location.replace("/join");
-                 });
-          */
-          window.location.replace("/join");
+            method: 'post',
+          }).then(() => {
+            window.location.replace('/join');
+          });
         }
-
       });
 
     } catch (err) {
@@ -581,21 +577,29 @@ function JoinMeeting() {
         fullName,
         password,
       };
-      if (meetingName == "" || fullName == "" || password == "") {
+      if (meetingName === "" || fullName === "" || password === "") {
         document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
       } else {
         fetch('/join', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(joinData)
-        }).then((data) => {
-          if (data.status === 200) {
-            document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
-            // join link needed
+        }).then(function (response) {
+          return response.text();
+        }).then(function (data) {
+          if (data[0] === "I") {//incorrect
+            document.getElementById('inner').innerHTML = data;
           } else {
-            window.location.replace("/login");
+            window.location.replace(data);
+            //document.getElementById('inner').innerHTML = "fetch=>" + data;
+            //fetch(data, {
+            // method: 'get',
+            //}).then(() => {
+            //window.location.replace("/join");
+            // });
+            //window.location.replace("/join");
           }
-        })
+        });
       }
     } catch (err) {
       console.log(err.data);

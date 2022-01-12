@@ -20,28 +20,16 @@ export default function App() {
               <Link to="/login">Login</Link>
             </li>
             <li>
-              <Link to="/singup">SingUp</Link>
+              <Link to="/signUp">SignUp</Link>
             </li>
-            {/*<li>
-              <Link to="/dashboard">Dashboard</Link>
-            </li>
-            <li>
-              <Link to="/join">JoinMeeting</Link>
-            </li>}*/}
           </ul>
         </nav>
-
-        {/* A <Switch> looks through its children <Route>s and
-        <Route path="/">
-            <Home />
-          </Route>
-            renders the first one that matches the current URL. */}
         <Switch>
           <Route path="/login">
             <Login />
           </Route>
-          <Route path="/singUp">
-            <SingUp />
+          <Route path="/signUp">
+            <SignUp />
           </Route>
           <Route path="/dashboard">
             <Dashboard />
@@ -49,11 +37,50 @@ export default function App() {
           <Route path="/join">
             <JoinMeeting />
           </Route>
+          <Route path="/home">
+            <Home />
+          </Route>
         </Switch>
       </div>
     </Router>
   );
 }
+
+function Home() {
+  async function logout(e) {
+    fetch('/logout', {
+      method: 'get',
+    }).then(function (response) { // nem igazán fontos, még nem tudom így marad e
+      return response.text();
+    }).then(function (data) {
+      localStorage.clear();
+      window.location.replace('/login');
+    });
+  }
+
+  async function openCreate(e) {
+    window.location.replace('/dashboard');
+  }
+
+  async function openJoin(e) {
+    window.location.replace('/join');
+  }
+
+  return (
+    <>
+      <section>
+        <h1>Welcome!</h1>
+        <h2>Would you like to create a meeting?</h2>
+        <button onClick={(e) => openCreate(e.target.value)}>Create a meeting</button><br></br>
+        <h2>Would you like to join to an existing meeting?</h2>
+        <button onClick={(e) => openJoin(e.target.value)}>Join</button><br></br>
+        <h2>Would you like to logout?</h2>
+        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+      </section>
+    </>
+  );
+}
+
 function Dashboard() {
 
   const [meetingName, setMeetingName] = useState("");
@@ -139,25 +166,27 @@ function Dashboard() {
         learningDashboardEnabled,
         learningDashboardCleanupDelayInMinutes
       };
-
-      fetch('/createurl', {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(info)
-      }).then(function (response) {
-        return response.text();
-      }).then(function (data) {
-        if (data === "Name alredy exists" || data === "You should log in first") {
-          document.getElementById('inner').innerHTML = data;
-        } else {
-          //document.getElementById('inner').innerHTML = "fetch=>" + data;
-          fetch(data, {
-            method: 'post',
-          }).then(() => {
-            window.location.replace('/join');
-          });
-        }
-      });
+      if (meetingName === "" || attendeePassword === "" || moderatorPassword === "") {
+        document.getElementById('inner').innerHTML = "Please fill out the required fields!";
+      } else {
+        fetch('/createurl', {
+          method: 'post',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(info)
+        }).then(function (response) {
+          return response.text();
+        }).then(function (data) { // valahogy vissza állni státuszra
+          if (data === "Name alredy exists" || data === "You should log in first") {
+            document.getElementById('inner').innerHTML = data;
+          } else {
+            fetch(data, {
+              method: 'post',
+            }).then(() => {
+              window.location.replace('/join');
+            });
+          }
+        });
+      }
 
     } catch (err) {
       console.log(err);
@@ -169,7 +198,8 @@ function Dashboard() {
     <>
       <section>
         <form>
-          <button onClick={(e) => logout(e.target.value)}>Logout</button>
+          <h2>Would you like to create a meeting?</h2>
+          <h2>Required settings</h2>
           <label>Name for the meeting:</label><br></br>
           <input
             autoComplete="off"
@@ -199,7 +229,9 @@ function Dashboard() {
           /><br></br>
         </form>
         <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
-        <h1 id="inner"></h1>
+        <h2 id="inner"></h2>
+        <h2>Would you like to logout?</h2>
+        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
         <h2>Optional settings</h2>
         <button onClick={(e) => enable(e.target.value)}>Enable optional settings</button>
         <fieldset id="Optional" disabled>
@@ -446,9 +478,9 @@ function Login() {
         body: JSON.stringify(loginData)
       }).then((data) => {
         if (data.status === 200) {
-          window.location.replace("/dashboard");
+          window.location.replace('/home');
         } else {
-          window.location.replace("/login");
+          document.getElementById('inner').innerHTML = "Incorrect credentials!";
         }
       });
 
@@ -483,40 +515,44 @@ function Login() {
           </label><br></br>
           <input type="submit" />
         </form>
+        <h2 id="inner"></h2>
 
       </section>
     </>
   );
 }
 
-function SingUp() {
+function SignUp() {
 
   const [first_name, setFirst_name] = useState("");
   const [last_name, setLast_name] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  async function singUp(e) {
+  async function signUp(e) {
     e.preventDefault();
     try {
-      const singUpData = {
+      const signUpData = {
         first_name,
         last_name,
         email,
         password,
       };
-      fetch('/singUp', {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(singUpData)
-      }).then((data) => {
-        if (data.status === 200) {
-          window.location.replace("/login");
-        } else {
-          window.location.replace("/singUp");
-        }
-      })
-
+      if (first_name === "" || last_name === "" || email === "" || password === "") {
+        document.getElementById('inner').innerHTML = "Please fill out all fields!";
+      } else {
+        fetch('/signUp', {
+          method: 'post',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(signUpData)
+        }).then((data) => {
+          if (data.status === 200) {
+            window.location.replace("/login");
+          } else {
+            document.getElementById('inner').innerHTML = "Account already exists please login!";
+          }
+        })
+      }
     } catch (err) {
       console.log(err.data);
     }
@@ -525,7 +561,7 @@ function SingUp() {
   return (
     <>
       <section>
-        <form onSubmit={singUp}>
+        <form onSubmit={signUp}>
           <label>Enter your first name:
             <input
               autoComplete="off"
@@ -568,6 +604,7 @@ function SingUp() {
           </label><br></br>
           <input type="submit" />
         </form>
+        <h2 id="inner"></h2>
       </section>
     </>
   );
@@ -611,7 +648,7 @@ function JoinMeeting() {
         }).then(function (response) {
           return response.text();
         }).then(function (data) {
-          if (data[0] === "I" || data === "You should log in first") {//incorrect
+          if (data[0] === "I" || data === "You should log in first") {//"incorrect "status kellene
             document.getElementById('inner').innerHTML = data;
           } else {
             window.location.replace(data);
@@ -633,7 +670,6 @@ function JoinMeeting() {
   return (
     <>
       <section>
-        <button onClick={(e) => logout(e.target.value)}>Logout</button>
         <form onSubmit={join}>
           <label>Meeting name:
             <input
@@ -677,7 +713,9 @@ function JoinMeeting() {
           </label><br></br>
           <input type="submit" />
         </form>
-        <h1 id="inner"></h1>
+        <h2 id="inner"></h2>
+        <h2>Would you like to logout?</h2>
+        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
       </section>
     </>
   );

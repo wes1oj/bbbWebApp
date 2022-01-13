@@ -9,9 +9,6 @@ module.exports = (sequelize, Sequelize) => {
         },
         moPassword: {
             type: Sequelize.STRING
-        },
-        atPassword: {
-            type: Sequelize.STRING
         }
     });
     return Meeting;

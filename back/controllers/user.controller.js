@@ -2,14 +2,8 @@ const db = require("../models");
 const bcrypt = require("bcrypt");
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const res = require("express/lib/response");
-//const Cookies = require('cookies')
-const { cookie } = require("express/lib/response");
-const { promise } = require("bcrypt/promises");
-const { refreshTokens } = require("../models");
 const User = db.users;
 const RefreshToken = db.refreshTokens;
-const Op = db.Sequelize.Op;
 const secret = process.env.KEY_SECRET;
 const resecret = process.env.KEY_REFRESH;
 
@@ -21,33 +15,34 @@ exports.login = (req, res) => {
     if (!(email && password)) {
       res.status(400).send("All input required!");
     } else {
-      // Find the user
-      Promise.all([
-        bcrypt.hash(password, 10),  //nem kell
-        User.findOne({ where: { email } })
-      ]).then(data => {
-        const [encryptedPassword, user] = data;
-        if (user === null) { res.status(403).send("Invalid email or password") } else {
-          // compare passwords
-          bcrypt.compare(password, user.password).then(data => {
-            //const result = data;
-            //console.log(result);
-            //allow user in
-            if (data) {
-              //if the user dont have any tokens but apperas in our database
+      // Find the user  
+      User.findOne({ where: { email } }).then(data => {
+        if (data === null) {
+          res.status(403).send("Invalid email or password")
+        }
+        else {
+          // Compare passwords
+          bcrypt.compare(password, data.password).then(ps => {
+            // Allow user in
+            if (ps) {
+              // If the user dont have any tokens but apperas in our database
               if (!req.headers.cookie) {
-                //chek the refresh databes and set a new value
+                // If we still have his refreshtoken
                 if (RefreshToken.findByPk(email)) {
+                  // Than we dont need it.
                   RefreshToken.destroy({
                     where: { refresh_email: email }
                   });
                 }
-                var refreshtoken = createRefreshToken(user.email);
-                var token = createToken(user.email);
+                // Create new tokens
+                var refreshtoken = createRefreshToken(data.email);
+                var token = createToken(data.email);
+                // Send new tokens
                 res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
                 res.cookie('refreshToken', refreshtoken, { httpOnly: true });
               }
-              res.status(200).send("success");
+              // Returns
+              res.status(200).send("Success");
             } else {
               res.status(400).send("Invalid Credentials");
             }
@@ -70,7 +65,7 @@ exports.create = (req, res) => {
     if (!(email && password && first_name && last_name)) {
       res.status(400).send("All input is required");
     }
-    // password encryption, and existing user check
+    // Password encryption, and existing user check
     Promise.all([
       bcrypt.hash(password, 10),
       User.findOne({ where: { email } })
@@ -132,109 +127,119 @@ exports.findOne = (req, res) => {
     });
 };
 
-/*
-exports.index = (req, res) => {
-  if (!req.headers.cookie) {
-    res.status().send({
-      message: "cookies not arrived"
-    });
-  } else {
-   res.status(200).send({
-      message: "bent"
-    });
-    console.log(`${__dirname}/index.html`);
-    res.sendFile('/home/attila/Dokumentumok/SafeSave/ATI_MENTÉSE/Egyetem/9.flv/szakdolgozat_node_trys/project5/back/secretpages/index.html');
-
-  }
-};
-*/
+// Create AccessToken
 function createToken(email) {
   var newtoken = jwt.sign({ email: email }, secret, { expiresIn: '15m' });
   return newtoken;
 };
 
+// Create RefreshToken and RefreshToken rekord
 function createRefreshToken(email) {
+  // Create refreshtoken
   const refreshtoken = jwt.sign({ email: email }, resecret);
+  // Set expiredate
   var expirerefresh = Date.now() + 7200000;
-  //create refreshtoken object
+  // Create refreshtoken object
   const object = {
     refresh_email: email,
     token: refreshtoken,
     expiryDate: expirerefresh,
   }
-  //create refreshtoken rekord 
+  // Create refreshtoken rekord 
   RefreshToken.create(object).then(data => {
-    console.log("refresh record created");
+    console.log("RefreshToken record created");
   }).catch(err => {
     res.status(500).send({
       message:
-        err.message || "create refresh token eroor"
+        err.message || "RefreshToken create Error"
     });
   });
+  // Return Token
   return refreshtoken;
 }
 
-function managerefresh(str) {
-  var tokentrim = str.substring(
-    str.indexOf("=") + 1,
-    str.length,
-  );
-  //const project = await Project.findOne({ where: { title: 'My Title' } });
-  RefreshToken.findOne({ where: { token: tokentrim } }).then(data => {
-    if (data) {
-      jwt.verify(tokentrim, resecret, (err) => {
-        if (err) {
-          res.redirect(403, "/login");
-        } else {
-          return data.email;
-        }
-      });
-    }
-  });
-}
-
+// Manage authentication
 exports.auth = (req, res, next) => {
+  // Get Cookies
   if (!req.headers.cookie) {
-    res.status(403).send("You should log in first");
+    res.status(403).send("You should login first");
   } else {
-    //console.log(req.headers.cookie);
+    // Extract AccessToken
     var str = req.headers.cookie.split(" ")[0];
     var tokentrim = str.substring(
       str.indexOf("=") + 1,
       str.lastIndexOf(";")
     );
-    jwt.verify(tokentrim, secret, (err, data) => {
+    // Verify AccessToken
+    jwt.verify(tokentrim, secret, (err) => {
+      // Wrong AccessToken
       if (err) {
+        // Delete AccessToken
         res.clearCookie('accessToken', { path: "/" });
+        // Extract RefreshToken
         var str = req.headers.cookie.split(" ")[1];
-        const tokentik = createToken(managerefresh(str));
-        //console.log(tokentik);
-
-        if (tokentik === null) {
-          res.redirect(403, "/login");
+        // Check RefreshToken Email
+        const extractedEmail = managerefresh(str);
+        // Check value
+        if (extractedEmail === null) {
+          // Denial Operation
+          res.status(403).send("You should login first")
+        } else {
+          // Create new AccessToken
+          const tokentik = createToken(extractedEmail);
+          // Send AccessToken
+          res.cookie('accessToken', tokentik, { httpOnly: true, overwrite: true });
+          next();
         }
-
-        res.cookie('accessToken', tokentik, { httpOnly: true, overwrite: true });
-        next();
       } else {
-
+        // AccessToken still valide
         next();
       }
     });
   }
 };
 
+function managerefresh(str) {
+  // Extract Token
+  var tokentrim = str.substring(
+    str.indexOf("=") + 1,
+    str.length,
+  );
+  // Do we still have the RefreshToken
+  RefreshToken.findOne({ where: { token: tokentrim } }).then(data => {
+    if (data) {
+      // Verify the token
+      jwt.verify(tokentrim, resecret, (err) => {
+        if (err) {
+          // RefreshToken not valid
+          return null;
+        } else {
+          // Return RefreshToken Email
+          return data.refresh_email;
+        }
+      });
+    } else {
+      // We dont have it in our db
+      return null;
+    }
+  });
+}
+
+// Manage logout operation
 exports.logout = (req, res) => {
+  // Get cookies
   var str = req.headers.cookie;
+  // Extract RefreshToken
   var tokentrim = str.substring(
     str.indexOf(";") + 15,
     str.length,
   );
+  // Delete RefreshToken record
   RefreshToken.destroy({ where: { token: tokentrim } }).then(() => {
+    // Delete Client Cookies
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
+    // Return OK
     res.status(200).send("deleted");
   });
-
-
 };

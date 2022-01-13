@@ -8,8 +8,6 @@ import {
 } from "react-router-dom";
 import './App.css';
 
-
-
 export default function App() {
   return (
     <Router>
@@ -47,25 +45,28 @@ export default function App() {
 }
 
 function Home() {
+  // Logout function
   async function logout(e) {
     fetch('/logout', {
       method: 'get',
-    }).then(function (response) { // nem igazán fontos, még nem tudom így marad e
-      return response.text();
-    }).then(function (data) {
-      localStorage.clear();
-      window.location.replace('/login');
+    }).then((response) => {
+      if (response.status === 200) {
+        window.location.replace('/login');
+      }
     });
   }
 
+  // Directions
   async function openCreate(e) {
     window.location.replace('/dashboard');
   }
 
+  // Directions
   async function openJoin(e) {
     window.location.replace('/join');
   }
 
+  //Home page
   return (
     <>
       <section>
@@ -83,6 +84,7 @@ function Home() {
 
 function Dashboard() {
 
+  // Prepare BBB default params
   const [meetingName, setMeetingName] = useState("");
   const [attendeePassword, setAttendeePassword] = useState("");
   const [moderatorPassword, setModeratorPassword] = useState("");
@@ -111,8 +113,7 @@ function Dashboard() {
   const [learningDashboardEnabled, setLearningDashboardEnabled] = useState(true);
   const [learningDashboardCleanupDelayInMinutes, setLearningDashboardCleanupDelayInMinutes] = useState(20);
 
-
-  //buttons disabel
+  // Disable Optional settings
   async function enable(e) {
     if (document.getElementById("Optional").disabled === true) {
       document.getElementById("Optional").disabled = false;
@@ -121,21 +122,23 @@ function Dashboard() {
     }
   }
 
+  // Logout function
   async function logout(e) {
     fetch('/logout', {
       method: 'get',
-    }).then(function (response) {
-      return response.text();
-    }).then(function (data) {
-      localStorage.clear();
-      window.location.replace('/login');
+    }).then((response) => {
+      if (response.status === 200) {
+        window.location.replace('/login');
+      }
     });
   }
 
-  //read from form;
+  // CreateURL
   async function getData(e) {
     try {
+      // If basicInfo is true we can use the deafult settings later
       const basicInfo = (document.getElementById("Optional").disabled === true);
+      // Create object
       const info = {
         basicInfo,
         meetingName,
@@ -166,34 +169,48 @@ function Dashboard() {
         learningDashboardEnabled,
         learningDashboardCleanupDelayInMinutes
       };
+      // Data check
       if (meetingName === "" || attendeePassword === "" || moderatorPassword === "") {
         document.getElementById('inner').innerHTML = "Please fill out the required fields!";
       } else {
+        // Create URL
         fetch('/createurl', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(info)
+          // We get the status
         }).then(function (response) {
-          return response.text();
-        }).then(function (data) { // valahogy vissza állni státuszra
-          if (data === "Name alredy exists" || data === "You should log in first") {
-            document.getElementById('inner').innerHTML = data;
-          } else {
+          if (response.status === 200) { // Ok
+            return response.text();
+          } else if (response.status === 403) { // Unauthorized
+            window.location.replace('/login');
+            return null;
+          } else if (response.status === 409) { // Data conflict
+            document.getElementById('inner').innerHTML = "Name already exists";
+            return null;
+          } else { //else
+            return null;
+          }
+          // If we have it, send the URL
+        }).then(function (data) {
+          if (data) {
+            // Take a Long Time to fetch
+            document.getElementById('inner').innerHTML = "Processing";
             fetch(data, {
               method: 'post',
             }).then(() => {
+              // We can join to the meeting
               window.location.replace('/join');
             });
           }
         });
       }
-
     } catch (err) {
       console.log(err);
     }
   }
 
-
+  // Create Page
   return (
     <>
       <section>
@@ -460,35 +477,41 @@ function Dashboard() {
   );
 }
 
+// Login Page
 function Login() {
 
+  // Set defaults
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Login function
   async function login(e) {
     e.preventDefault();
     try {
+      // Create object
       const loginData = {
         email,
         password,
       };
+      // Send Login Data
       fetch('/login', {
         method: 'post',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(loginData)
       }).then((data) => {
+        // OK
         if (data.status === 200) {
           window.location.replace('/home');
-        } else {
+        } else { // Else
           document.getElementById('inner').innerHTML = "Incorrect credentials!";
         }
       });
-
     } catch (err) {
       console.log(err.data);
     }
   }
 
+  // Login Page
   return (
     <>
       <section>
@@ -522,33 +545,39 @@ function Login() {
   );
 }
 
+// Sign Up
 function SignUp() {
 
+  // Set defaults
   const [first_name, setFirst_name] = useState("");
   const [last_name, setLast_name] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Sign up functions
   async function signUp(e) {
     e.preventDefault();
     try {
+      // Create object
       const signUpData = {
         first_name,
         last_name,
         email,
         password,
       };
+      // Check Input
       if (first_name === "" || last_name === "" || email === "" || password === "") {
         document.getElementById('inner').innerHTML = "Please fill out all fields!";
       } else {
+        // Send Input
         fetch('/signUp', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(signUpData)
         }).then((data) => {
-          if (data.status === 200) {
+          if (data.status === 200) {// OK
             window.location.replace("/login");
-          } else {
+          } else { // Else
             document.getElementById('inner').innerHTML = "Account already exists please login!";
           }
         })
@@ -558,6 +587,7 @@ function SignUp() {
     }
   }
 
+  // Sign Up Page
   return (
     <>
       <section>
@@ -610,55 +640,62 @@ function SignUp() {
   );
 }
 
+// Join to the meeting
 function JoinMeeting() {
 
-
+  // Create an object
   const [meetingName, setmeetingName] = useState("");
   const [meetingId, setmeetingId] = useState("");
   const [fullName, setfullName] = useState("");
   const [password, setPassword] = useState("");
 
+  // Logout function
   async function logout(e) {
     fetch('/logout', {
       method: 'get',
-    }).then(function (response) {
-      return response.text();
-    }).then(function (data) {
-      localStorage.clear();
-      window.location.replace('/login');
+    }).then((response) => {
+      if (response.status === 200) {
+        window.location.replace('/login');
+      }
     });
   }
 
+  // Join meeting function
   async function join(e) {
     e.preventDefault();
     try {
+      // Create Object
       const joinData = {
         meetingName,
         meetingId,
         fullName,
         password,
       };
+      // Check Input
       if (meetingName === "" || fullName === "" || password === "") {
         document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
       } else {
+        // Send Input
         fetch('/join', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(joinData)
         }).then(function (response) {
-          return response.text();
+          if (response.status === 200) { // Ok
+            return response.text();
+          } else if (response.status === 403) { // Unauthorized
+            window.location.replace('/login');
+            return null;
+          } else if (response.status === 409) { // Data conflict
+            document.getElementById('inner').innerHTML = "Incorrect meeting ID or Name!";
+            return null;
+          } else { //else
+            return null;
+          }
+          // Join to the meeting
         }).then(function (data) {
-          if (data[0] === "I" || data === "You should log in first") {//"incorrect "status kellene
-            document.getElementById('inner').innerHTML = data;
-          } else {
+          if (data) {
             window.location.replace(data);
-            //document.getElementById('inner').innerHTML = "fetch=>" + data;
-            //fetch(data, {
-            // method: 'get',
-            //}).then(() => {
-            //window.location.replace("/join");
-            // });
-            //window.location.replace("/join");
           }
         });
       }
@@ -667,6 +704,7 @@ function JoinMeeting() {
     }
   }
 
+  // Join meeting page
   return (
     <>
       <section>

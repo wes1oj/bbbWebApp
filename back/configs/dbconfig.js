@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+// DB connection configuration
 module.exports = {
   HOST: process.env.HOST,
   USER: process.env.USER,

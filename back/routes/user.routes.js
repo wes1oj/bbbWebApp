@@ -13,11 +13,13 @@ module.exports = app => {
   // Create BBB url
   router.post("/createurl", users.auth, urls.createurl);
 
+  // Join BBB meeting
   router.post("/join", users.auth, urls.joinurl);
 
+  // Logout user
   router.get("/logout", users.logout);
 
-  // Retrieve a single Tutorial with id
+  // Nem biztos hogy kelleni fog de azért itt marad
   router.get("/:id", users.findOne);
 
   app.use('/', router);

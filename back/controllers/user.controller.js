@@ -14,13 +14,12 @@ const secret = process.env.KEY_SECRET;
 const resecret = process.env.KEY_REFRESH;
 
 exports.login = (req, res) => {
-  // Validate request
   try {
     // Use the incomeing data
     const { email, password } = req.body;
-    // if exists
+    // Validate user input
     if (!(email && password)) {
-      res.status(400).send("All input is required");
+      res.status(400).send("All input required!");
     } else {
       // Find the user
       Promise.all([
@@ -71,24 +70,24 @@ exports.create = (req, res) => {
     if (!(email && password && first_name && last_name)) {
       res.status(400).send("All input is required");
     }
-    // password encryption existing user check
+    // password encryption, and existing user check
     Promise.all([
       bcrypt.hash(password, 10),
       User.findOne({ where: { email } })
     ]).then(data => {
       const [encryptedPassword, oldUser] = data;
-      //console.log(oldUser);
+      // If User alredy exists
       if (oldUser != null) {
         return res.status(409).send("User Already Exist. Please Login");
       }
-      //create user object
+      // Create user object
       const user = {
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         email: req.body.email,
         password: encryptedPassword,
       };
-      //create user inside the data base
+      // Create user inside the database
       User.create(user)
         .then(() => {
           console.log("record created");
@@ -100,22 +99,21 @@ exports.create = (req, res) => {
           });
         });
 
-      //create refreshtoken values
+      // Create refreshtoken values
       var refreshtoken = createRefreshToken(user.email)
-      //create accesstoken
+      // Create accesstoken
       var token = createToken(user.email);
-      //set cookies
+      // Set cookies
       res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
       res.cookie('refreshToken', refreshtoken, { httpOnly: true });
-      //redirect to login page
-      res.redirect(200, "/login");
+      // Response OK
+      res.status(200).send("User created");
     }).catch(err => {
       console.log(err);
     });
   } catch (err) {
     console.log(err);
   }
-
 };
 
 // Find a single user with an email

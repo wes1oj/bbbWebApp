@@ -64,48 +64,50 @@ exports.create = (req, res) => {
     // Validate user input
     if (!(email && password && firstName && lastName)) {
       res.status(400).send("All input is required");
-    }
-    // Password encryption, and existing user check
-    Promise.all([
-      bcrypt.hash(password, 10),
-      User.findOne({ where: { email } })
-    ]).then(data => {
-      const [encryptedPassword, oldUser] = data;
-      // If User alredy exists
-      if (oldUser != null) {
-        return res.status(409).send("User Already Exist. Please Login");
-      }
-      // Create user object
-      const user = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        password: encryptedPassword,
-      };
-      // Create user inside the database
-      User.create(user)
-        .then(() => {
-          console.log("record created");
-        })
-        .catch(err => {
-          res.status(500).send({
-            message:
-              err.message || "Some error occurred while creating the User."
-          });
-        });
+    } else {
+      // Password encryption, and existing user check
+      Promise.all([
+        bcrypt.hash(password, 10),
+        User.findOne({ where: { email } })
+      ]).then(data => {
+        const [encryptedPassword, oldUser] = data;
+        // If User alredy exists
+        if (oldUser != null) {
+          return res.status(409).send("User Already Exist. Please Login");
+        } else {
+          // Create user object
+          const user = {
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            email: req.body.email,
+            password: encryptedPassword,
+          };
+          // Create user inside the database
+          User.create(user)
+            .then(() => {
+              console.log("record created");
+            })
+            .catch(err => {
+              res.status(500).send({
+                message:
+                  err.message || "Some error occurred while creating the User."
+              });
+            });
 
-      // Create refreshtoken values
-      var refreshtoken = createRefreshToken(user.email)
-      // Create accesstoken
-      var token = createToken(user.email);
-      // Set cookies
-      res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
-      res.cookie('refreshToken', refreshtoken, { httpOnly: true });
-      // Response OK
-      res.status(200).send("User created");
-    }).catch(err => {
-      console.log(err);
-    });
+          // Create refreshtoken values
+          var refreshtoken = createRefreshToken(user.email)
+          // Create accesstoken
+          var token = createToken(user.email);
+          // Set cookies
+          res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
+          res.cookie('refreshToken', refreshtoken, { httpOnly: true });
+          // Response OK
+          res.status(200).send("User created");
+        }
+      }).catch(err => {
+        console.log(err);
+      });
+    }
   } catch (err) {
     console.log(err);
   }

@@ -6,7 +6,6 @@ import {
   Route,
   Link
 } from "react-router-dom";
-import './App.css';
 
 export default function App() {
   return (
@@ -549,8 +548,8 @@ function Login() {
 function SignUp() {
 
   // Set defaults
-  const [first_name, setFirst_name] = useState("");
-  const [last_name, setLast_name] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -560,13 +559,13 @@ function SignUp() {
     try {
       // Create object
       const signUpData = {
-        first_name,
-        last_name,
+        firstName,
+        lastName,
         email,
         password,
       };
       // Check Input
-      if (first_name === "" || last_name === "" || email === "" || password === "") {
+      if (firstName === "" || lastName === "" || email === "" || password === "") {
         document.getElementById('inner').innerHTML = "Please fill out all fields!";
       } else {
         // Send Input
@@ -598,8 +597,8 @@ function SignUp() {
               className="input"
               type="text"
               placeholder="first name"
-              onChange={(e) => setFirst_name(e.target.value)}
-              value={first_name}
+              onChange={(e) => setFirstName(e.target.value)}
+              value={firstName}
             />
           </label><br></br>
           <label>Enter your last name:
@@ -608,8 +607,8 @@ function SignUp() {
               className="input"
               type="text"
               placeholder="last name"
-              onChange={(e) => setLast_name(e.target.value)}
-              value={last_name}
+              onChange={(e) => setLastName(e.target.value)}
+              value={lastName}
             />
           </label><br></br>
           <label>Enter your email:

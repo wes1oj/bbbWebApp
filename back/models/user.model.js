@@ -5,23 +5,19 @@ module.exports = (sequelize, Sequelize) => {
       autoIncrement: true,
       primaryKey: true
     },
-    /*refres_id: {
-      type: Sequelize.INTEGER,
-      foringKey: true,
-    },*/
-    first_name: {
+    firstName: {
       type: Sequelize.STRING
     },
-    last_name: {
+    lastName: {
       type: Sequelize.STRING
     },
     email: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+      unique: true
     },
     password: {
       type: Sequelize.STRING
     }
   });
-
   return User;
 };

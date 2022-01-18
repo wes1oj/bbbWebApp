@@ -2,10 +2,11 @@ module.exports = (sequelize, Sequelize) => {
     const Meeting = sequelize.define("meeting", {
         meetingId: {
             type: Sequelize.STRING,
-            primaryKey: true
+            primaryKey: true,
         },
         meetingName: {
-            type: Sequelize.STRING
+            type: Sequelize.STRING,
+            unique: true
         },
         moPassword: {
             type: Sequelize.STRING

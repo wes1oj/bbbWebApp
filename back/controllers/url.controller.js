@@ -110,11 +110,12 @@ exports.createurl = (req, res) => {
 function createMeetingRecord(meetingID, meetingName, moderatorPassword) {
     // Hash the moderator password
     bcrypt.hash(moderatorPassword, 10).then(data => {
+        var ps = url_encode(data);
         // Create an object
         const meeting = {
             meetingId: meetingID,
             meetingName: meetingName,
-            moPassword: data,
+            moPassword: ps,
         };
         // Create meeting record
         Meeting.create(meeting)

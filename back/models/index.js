@@ -22,13 +22,5 @@ db.sequelize = sequelize;
 db.users = require("./user.model")(sequelize, Sequelize);
 db.refreshTokens = require("./refresh.model")(sequelize, Sequelize);
 db.meetings = require("./meeting.model")(sequelize, Sequelize);
-/*
-never worked
-db.refreshTokens.belongsTo(db.users, {
-  foreignKey: 'user_id', targetKey: 'id'
-});
-db.users.hasOne(db.refreshTokens, {
-  foreignKey: 'user_id', targetKey: 'id'
-});
-*/
+
 module.exports = db;

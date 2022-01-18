@@ -31,7 +31,7 @@ exports.login = (req, res) => {
                 if (RefreshToken.findByPk(email)) {
                   // Than we dont need it.
                   RefreshToken.destroy({
-                    where: { refresh_email: email }
+                    where: { refreshEmail: email }
                   });
                 }
                 // Create new tokens
@@ -60,9 +60,9 @@ exports.create = (req, res) => {
   // Our register logic starts here
   try {
     // Get user input
-    const { first_name, last_name, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
     // Validate user input
-    if (!(email && password && first_name && last_name)) {
+    if (!(email && password && firstName && lastName)) {
       res.status(400).send("All input is required");
     }
     // Password encryption, and existing user check
@@ -77,8 +77,8 @@ exports.create = (req, res) => {
       }
       // Create user object
       const user = {
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
         email: req.body.email,
         password: encryptedPassword,
       };
@@ -141,7 +141,7 @@ function createRefreshToken(email) {
   var expirerefresh = Date.now() + 7200000;
   // Create refreshtoken object
   const object = {
-    refresh_email: email,
+    refreshEmail: email,
     token: refreshtoken,
     expiryDate: expirerefresh,
   }
@@ -215,7 +215,7 @@ function managerefresh(str) {
           return null;
         } else {
           // Return RefreshToken Email
-          return data.refresh_email;
+          return data.refreshEmail;
         }
       });
     } else {

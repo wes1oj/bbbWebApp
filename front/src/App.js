@@ -46,7 +46,7 @@ export default function App() {
 function Home() {
   // Logout function
   async function logout(e) {
-    fetch('/logout', {
+    fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
       if (response.status === 200) {
@@ -123,7 +123,7 @@ function Dashboard() {
 
   // Logout function
   async function logout(e) {
-    fetch('/logout', {
+    fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
       if (response.status === 200) {
@@ -173,7 +173,7 @@ function Dashboard() {
         document.getElementById('inner').innerHTML = "Please fill out the required fields!";
       } else {
         // Create URL
-        fetch('/createurl', {
+        fetch('/api/createurl', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(info)
@@ -493,7 +493,7 @@ function Login() {
         password,
       };
       // Send Login Data
-      fetch('/login', {
+      fetch('/api/login', {
         method: 'post',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(loginData)
@@ -569,7 +569,7 @@ function SignUp() {
         document.getElementById('inner').innerHTML = "Please fill out all fields!";
       } else {
         // Send Input
-        fetch('/signUp', {
+        fetch('/api/signUp', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(signUpData)
@@ -650,7 +650,7 @@ function JoinMeeting() {
 
   // Logout function
   async function logout(e) {
-    fetch('/logout', {
+    fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
       if (response.status === 200) {
@@ -675,7 +675,7 @@ function JoinMeeting() {
         document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
       } else {
         // Send Input
-        fetch('/join', {
+        fetch('/api/join', {
           method: 'post',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(joinData)

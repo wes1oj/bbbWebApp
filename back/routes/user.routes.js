@@ -22,5 +22,5 @@ module.exports = app => {
   // Nem biztos hogy kelleni fog de azért itt marad
   router.get("/:id", users.findOne);
 
-  app.use('/', router);
+  app.use('/api', router);
 };

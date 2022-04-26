@@ -2,7 +2,7 @@
 const db = require("../models");
 require('dotenv').config();
 const talan = require('./sha1');
-const Meeting = db.meetings;
+const Meeting = db.meeting;
 const bcrypt = require("bcrypt");
 
 exports.createurl = (req, res) => {
@@ -36,7 +36,10 @@ exports.createurl = (req, res) => {
         learningDashboardEnabled,
         learningDashboardCleanupDelayInMinutes } = req.body;
 
-    Meeting.findOne({ where: { meetingName: meetingName } }).then(data => {
+    var cookie = req.headers.cookie;
+    var Id = findOutUserId(cookie);
+
+    Meeting.findOne({ where: { MeetName: meetingName } }).then(data => {
         // If the meeting not exists in our database
         if (data == null) {
             // We can use the default params 
@@ -52,8 +55,8 @@ exports.createurl = (req, res) => {
                 // Create create meeting url
                 const url = createMeetingURL(param, hash);
                 // Create meeting recrod
-                createMeetingRecord(meetingID, meetingName, moderatorPassword, attendeePassword);
-                // Show the url in commandline
+                createMeetingRecord(meetingID, meetingName, moderatorPassword, Id);
+                // Manual test
                 console.log(url);
                 // Return Url
                 res.status(200).send(url);
@@ -93,7 +96,7 @@ exports.createurl = (req, res) => {
                 // Create create meeting url
                 const url = createMeetingURL(param, hash);
                 // Create meeting record
-                createMeetingRecord(meetingID, meetingName, moderatorPassword, attendeePassword);
+                createMeetingRecord(meetingID, meetingName, moderatorPassword, Id);
                 // Show the url
                 console.log(url);
                 // Return
@@ -106,16 +109,40 @@ exports.createurl = (req, res) => {
     })
 }
 
+async function ExtractUserInfo(a) {
+    var c = jwt.verify(a, secret);
+    const encryption = {
+        key: prKey,
+        algorithm: 'aes-256-cbc',
+    };
+    const d = jwte.readJWT(a, encryption);
+    return d;
+};
+module.exports.ExtractUserInfo = ExtractUserInfo;
+
+function findOutUserId(cookie) {
+    var str = cookie.split(" ")[0];
+    var tokentrim = str.substring(
+        str.indexOf("=") + 1,
+        str.lastIndexOf(";")
+    );
+    ExtractUserInfo(tokentrim).then((data) => {
+        console.log("Create URL EXtract findOutUserId data")
+        console.log(data);
+    });
+}
+
 // Create meeting
-function createMeetingRecord(meetingID, meetingName, moderatorPassword) {
+function createMeetingRecord(meetingID, meetingName, moderatorPassword, Id) {
     // Hash the moderator password
     bcrypt.hash(moderatorPassword, 10).then(data => {
         var ps = url_encode(data);
         // Create an object
         const meeting = {
-            meetingId: meetingID,
-            meetingName: meetingName,
-            moPassword: ps,
+            MeetID: meetingID,
+            MeetName: meetingName,
+            MeetPW: ps,
+            MeetMoID: Id
         };
         // Create meeting record
         Meeting.create(meeting)

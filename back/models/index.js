@@ -1,11 +1,9 @@
 const dbConfig = require("../configs/dbconfig");
-
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
   operatorsAliases: false,
-
   pool: {
     max: dbConfig.pool.max,
     min: dbConfig.pool.min,
@@ -19,8 +17,10 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-db.users = require("./user.model")(sequelize, Sequelize);
-db.refreshTokens = require("./refresh.model")(sequelize, Sequelize);
-db.meetings = require("./meeting.model")(sequelize, Sequelize);
+db.user = require("./user.model")(sequelize, Sequelize);
+db.userRole = require("./userRole.model")(sequelize, Sequelize);
+db.userRole.hasMany(db.user);
+db.reToken = require("./refresh.model")(sequelize, Sequelize);
+db.meeting = require("./meeting.model")(sequelize, Sequelize);
 
 module.exports = db;

@@ -38,14 +38,18 @@ export default function App() {
             <Home />
           </Route>
         </Switch>
+        <Route path="/ModeratorSpace">
+          <ModeratorSpace />
+        </Route>
       </div>
     </Router>
   );
 }
 
+
 function Home() {
   // Logout function
-  async function logout(e) {
+  function logout(e) {
     fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
@@ -56,26 +60,78 @@ function Home() {
   }
 
   // Directions
-  async function openCreate(e) {
-    window.location.replace('/dashboard');
+  function openCreate(e) {
+    //Check access Token
+    fetch('/api/acc', { method: 'get' }).then((res) => {
+      if (res.status === 200) {
+        //Check Role
+        fetch('/api/isAdmin', {
+          method: 'get',
+        }).then((res) => {
+          if (res.status === 200) {
+            //Admin
+            window.location.replace('/dashboard');
+          } else {
+            //User
+            document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+          }
+        });
+      } else {//Invalid Access Token
+        //Chek RefreshToken
+        fetch('/api/ref', { method: 'get' }).then((res) => {
+          if (res.status === 200) {
+            // Check Role
+            fetch('/api/isAdmin', {
+              method: 'get',
+            }).then((res) => {
+              if (res.status === 200) {
+                //Admin
+                window.location.replace('/dashboard');
+              } else {
+                //User
+                document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+              }
+            });
+          } else {
+            //Invalid Refresh
+            logout(e);
+          }
+        });
+      }
+    });
   }
 
   // Directions
-  async function openJoin(e) {
-    window.location.replace('/join');
+  function openJoin(e) {
+    fetch('/api/acc', { method: 'get' }).then((res) => {
+      if (res.status === 200) {
+        window.location.replace('/join');
+      } else {
+        fetch('/api/ref', { method: 'get' }).then((res) => {
+          if (res.status === 200) {
+            window.location.replace('/join');
+          } else {
+            window.location.replace('/login');
+          }
+        });
+      }
+    });
   }
 
   //Home page
   return (
     <>
       <section>
+        <div></div>
         <h1>Welcome!</h1>
-        <h2>Would you like to create a meeting?</h2>
+        <div>Would you like to create a meeting?</div>
         <button onClick={(e) => openCreate(e.target.value)}>Create a meeting</button><br></br>
-        <h2>Would you like to join to an existing meeting?</h2>
+        <div>Would you like to join to an existing meeting?</div>
         <button onClick={(e) => openJoin(e.target.value)}>Join</button><br></br>
-        <h2>Would you like to logout?</h2>
+        <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+
+        <div id="inner"></div>
       </section>
     </>
   );
@@ -112,8 +168,8 @@ function Dashboard() {
   const [learningDashboardEnabled, setLearningDashboardEnabled] = useState(true);
   const [learningDashboardCleanupDelayInMinutes, setLearningDashboardCleanupDelayInMinutes] = useState(20);
 
-  // Disable Optional settings
-  async function enable(e) {
+  // Disable Optional settings on display
+  function enable(e) {
     if (document.getElementById("Optional").disabled === true) {
       document.getElementById("Optional").disabled = false;
     } else {
@@ -122,7 +178,7 @@ function Dashboard() {
   }
 
   // Logout function
-  async function logout(e) {
+  function logout(e) {
     fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
@@ -133,7 +189,7 @@ function Dashboard() {
   }
 
   // CreateURL
-  async function getData(e) {
+  function getData(e) {
     try {
       // If basicInfo is true we can use the deafult settings later
       const basicInfo = (document.getElementById("Optional").disabled === true);
@@ -172,37 +228,88 @@ function Dashboard() {
       if (meetingName === "" || attendeePassword === "" || moderatorPassword === "") {
         document.getElementById('inner').innerHTML = "Please fill out the required fields!";
       } else {
-        // Create URL
-        fetch('/api/createurl', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(info)
-          // We get the status
-        }).then(function (response) {
-          if (response.status === 200) { // Ok
-            return response.text();
-          } else if (response.status === 403) { // Unauthorized
-            window.location.replace('/login');
-            return null;
-          } else if (response.status === 409) { // Data conflict
-            document.getElementById('inner').innerHTML = "Name already exists";
-            return null;
-          } else { //else
-            return null;
-          }
-          // If we have it, send the URL
-        }).then(function (data) {
-          if (data) {
-            // Take a Long Time to fetch
-            document.getElementById('inner').innerHTML = "Processing";
-            fetch(data, {
-              method: 'post',
-            }).then(() => {
-              // We can join to the meeting
-              window.location.replace('/join');
+
+        fetch('/api/acc', { method: 'get' }).then((res) => {
+          if (res.status === 200) {
+            fetch('/api/isAdmin', { method: 'get' }).then((res) => {
+              if (res.status === 200) {
+                fetch('/api/createurl', {
+                  method: 'post',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(info)
+                }).then(data => {
+                  //console.log(data);
+                  //a szervernek kell hívni az urlt
+                  //teszt teszt 
+                  document.getElementById('inner').innerHTML = data.statusText;
+                  //teszt teszt 
+                });
+              } else {
+                document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+              }
+
+            });
+          } else {
+            fetch('/api/ref', { method: 'get' }).then((res) => {
+              if (res.status === 200) {
+                fetch('/api/isAdmin', { method: 'get' }).then((res) => {
+                  if (res.status === 200) {
+                    fetch('/api/createurl', {
+                      method: 'post',
+                      headers: { 'content-type': 'application/json' },
+                      body: JSON.stringify(info)
+                    }).then(data => {
+                      //console.log(data);
+                      //a szervernek kell hívni az urlt
+                      //teszt teszt 
+                      document.getElementById('inner').innerHTML = data.statusText;
+                      //teszt teszt 
+
+                    });
+                  } else {
+                    document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+                  }
+
+                });
+              } else {
+                window.location.replace('/login');
+              }
             });
           }
         });
+
+        /*
+        // Create URL
+        fetch('/api/createurl', {
+        method: 'post',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(info)
+        // We get the status
+        }).then(function (response) {
+        if (response.status === 200) { // Ok
+        return response.text();
+        } else if (response.status === 403) { // Unauthorized
+        window.location.replace('/login');
+        return null;
+        } else if (response.status === 409) { // Data conflict
+        document.getElementById('inner').innerHTML = "Name already exists";
+        return null;
+        } else { //else
+        return null;
+        }
+        // If we have it, send the URL
+        }).then(function (data) {
+        if (data) {
+        // Take a Long Time to fetch
+        document.getElementById('inner').innerHTML = "Processing";
+        fetch(data, {
+        method: 'post',
+        }).then(() => {
+        // We can join to the meeting
+        window.location.replace('/join');
+        });
+        }
+        });*/
       }
     } catch (err) {
       console.log(err);
@@ -214,8 +321,8 @@ function Dashboard() {
     <>
       <section>
         <form>
-          <h2>Would you like to create a meeting?</h2>
-          <h2>Required settings</h2>
+          <div>Would you like to create a meeting?</div>
+          <div>Required settings</div>
           <label>Name for the meeting:</label><br></br>
           <input
             autoComplete="off"
@@ -245,10 +352,10 @@ function Dashboard() {
           /><br></br>
         </form>
         <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
-        <h2 id="inner"></h2>
-        <h2>Would you like to logout?</h2>
+        <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
-        <h2>Optional settings</h2>
+        <div id="inner"></div>
+        <div>Optional settings</div>
         <button onClick={(e) => enable(e.target.value)}>Enable optional settings</button>
         <fieldset id="Optional" disabled>
           <div>
@@ -484,7 +591,7 @@ function Login() {
   const [password, setPassword] = useState("");
 
   // Login function
-  async function login(e) {
+  function login(e) {
     e.preventDefault();
     try {
       // Create object
@@ -501,7 +608,7 @@ function Login() {
         // OK
         if (data.status === 200) {
           window.location.replace('/home');
-        } else { // Else
+        } else {
           document.getElementById('inner').innerHTML = "Incorrect credentials!";
         }
       });
@@ -537,8 +644,7 @@ function Login() {
           </label><br></br>
           <input type="submit" />
         </form>
-        <h2 id="inner"></h2>
-
+        <div id="inner"></div>
       </section>
     </>
   );
@@ -554,7 +660,7 @@ function SignUp() {
   const [password, setPassword] = useState("");
 
   // Sign up functions
-  async function signUp(e) {
+  function signUp(e) {
     e.preventDefault();
     try {
       // Create object
@@ -633,7 +739,7 @@ function SignUp() {
           </label><br></br>
           <input type="submit" />
         </form>
-        <h2 id="inner"></h2>
+        <div id="inner"></div>
       </section>
     </>
   );
@@ -649,7 +755,7 @@ function JoinMeeting() {
   const [password, setPassword] = useState("");
 
   // Logout function
-  async function logout(e) {
+  function logout(e) {
     fetch('/api/logout', {
       method: 'get',
     }).then((response) => {
@@ -660,7 +766,7 @@ function JoinMeeting() {
   }
 
   // Join meeting function
-  async function join(e) {
+  function join(e) {
     e.preventDefault();
     try {
       // Create Object
@@ -750,10 +856,80 @@ function JoinMeeting() {
           </label><br></br>
           <input type="submit" />
         </form>
-        <h2 id="inner"></h2>
-        <h2>Would you like to logout?</h2>
+        <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+        <div id="inner"></div>
       </section>
     </>
   );
+}
+
+function ModeratorSpace() {
+
+  const [ID, setID] = useState("");
+
+  // Logout function
+  function logout(e) {
+    fetch('/api/logout', {
+      method: 'get',
+    }).then((response) => {
+      if (response.status === 200) {
+        window.location.replace('/login');
+      }
+    });
+  }
+
+  function safe(e) {
+    e.preventDefault();
+    const asd = { ID };
+    fetch('/api/moderator', {
+      method: 'get',
+    }).then((response) => {
+      if (!response.status === 200) {
+        fetch('/api/logout', {
+          method: 'get',
+        }).then((response) => {
+          if (response.status === 200) {
+            window.location.replace('/login');
+          }
+        });
+      } else {
+
+        fetch('api/setS', {
+          method: 'post',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(asd)
+        }).then((res) => {
+          document.getElementById('inner').innerHTML = res.status;
+        });
+      }
+    });
+
+  }
+
+
+  return (
+    <>
+      <section>
+        <form onSubmit={safe}>
+          <label>ID:
+            <input
+              autoComplete="off"
+              className="input"
+              type="text"
+              placeholder="ID"
+              onChange={(e) => setID(e.target.value)}
+              value={ID}
+            />
+          </label><br></br>
+          <input type="submit" />
+        </form>
+
+        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+        <div id="inner"></div>
+      </section>
+    </>
+
+  );
+
 }

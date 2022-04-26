@@ -1,15 +1,18 @@
 module.exports = (sequelize, Sequelize) => {
     const Meeting = sequelize.define("meeting", {
-        meetingId: {
+        MeetID: {
             type: Sequelize.STRING,
             primaryKey: true,
         },
-        meetingName: {
+        MeetName: {
             type: Sequelize.STRING,
             unique: true
         },
-        moPassword: {
+        MeetPW: {
             type: Sequelize.STRING
+        },
+        MeetModerID: {
+            type: Sequelize.INTEGER
         }
     });
     return Meeting;

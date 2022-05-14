@@ -35,8 +35,9 @@ exports.login = (req, res) => {
                   where: { ReEmail: email }
                 });
               }
+              console.log(data);
               // Create new tokens
-              auth.createToken(email, data.FirstName, data.LastName, data.roleRoleID).then(a => {
+              auth.createToken(email, data.FirstName, data.LastName, data.roleRoleID, data.ID).then(a => {
                 var token = a;
                 auth.createReToken(email).then(b => {
                   var Retoken = b;

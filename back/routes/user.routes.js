@@ -12,10 +12,10 @@ module.exports = app => {
   router.post("/login", users.login);
 
   // Create BBB url
-  //router.post("/createurl", users.auth, urls.createurl);
+  router.post("/createurl", urls.createurl);
 
   // Join BBB meeting
-  //router.post("/join", users.auth, urls.joinurl);
+  router.post("/join", urls.joinurl);
 
   //Check 
   router.get("/isAdmin", auth.isAdmin)
@@ -28,12 +28,10 @@ module.exports = app => {
 
   // Get ACc Token
   router.get("/acc", auth.authAccsess);
-  // Nem biztos hogy kelleni fog de azért itt marad
-  //router.get("/:id", users.findOne);
 
   router.get("/moderator", auth.authModerator);
-  router.post("/setS", users.setS);
+  router.post("/set", users.setS);
 
 
-  app.use('/api', router);
+  app.use('/server', router);
 };

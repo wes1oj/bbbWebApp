@@ -46,75 +46,118 @@ export default function App() {
   );
 }
 
+export function logout(e) {
+  fetch(lut, {
+    method: 'get',
+  }).then((response) => {
+    if (response.status === 200) {
+      window.location.replace('/login');
+    }
+  });
+}
+
+
+export function back(e) {
+  window.location.replace('/home');
+}
+
+export async function authCall() {
+  let x = await fetch(acc);
+  console.log(x);
+  if (x.status === 200) {
+    return true;
+  }
+  let y = fetch(ref);
+  console.log(y);
+  if (y.status === 200) {
+    return true;
+  }
+  return false;
+}
+
+export async function call(a) {
+  let x = await fetch(a);
+  if (x.status === 200) {
+    return true;
+  }
+  return false;
+}
+
+export async function callPost(a, data) {
+  let x = await fetch(a, {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (x.status === 200) {
+    return true;
+  }
+  return false;
+}
+
+export async function callPostUrl(a, data) {
+  let x = await fetch(a, {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  let y = await x.json();
+  console.log(y);
+  return y.url;
+}
+
+const acc = '/server/acc';
+const isa = '/server/isAdmin';
+const ref = '/server/ref';
+const lut = '/server/logout';
+const lin = '/server/login';
+const cre = '/server/createurl';
+const aoi = '/server/join';
+const sig = '/server/signUp';
+const set = '/server/set';
+const mod = '/server/moderator';
+
+const das = '/dashboard';
+const log = '/login';
+const joi = '/join';
+const hom = '/home';
+
 
 function Home() {
-  // Logout function
-  function logout(e) {
-    fetch('/api/logout', {
-      method: 'get',
-    }).then((response) => {
-      if (response.status === 200) {
-        window.location.replace('/login');
-      }
-    });
-  }
 
   // Directions
   function openCreate(e) {
-    //Check access Token
-    fetch('/api/acc', { method: 'get' }).then((res) => {
-      if (res.status === 200) {
-        //Check Role
-        fetch('/api/isAdmin', {
-          method: 'get',
-        }).then((res) => {
-          if (res.status === 200) {
-            //Admin
-            window.location.replace('/dashboard');
-          } else {
-            //User
-            document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-          }
+    authCall().then((res) => {
+      if (!res) {
+        call(lut).then(() => {
+          window.location.replace(log);
         });
-      } else {//Invalid Access Token
-        //Chek RefreshToken
-        fetch('/api/ref', { method: 'get' }).then((res) => {
-          if (res.status === 200) {
-            // Check Role
-            fetch('/api/isAdmin', {
-              method: 'get',
-            }).then((res) => {
-              if (res.status === 200) {
-                //Admin
-                window.location.replace('/dashboard');
-              } else {
-                //User
-                document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-              }
-            });
-          } else {
-            //Invalid Refresh
-            logout(e);
-          }
-        });
+        return null;
       }
+      call(isa).then((res) => {
+        if (!res) {
+          document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+          return null;
+        }
+        window.location.replace(das);
+        return null;
+      });
+      return null;
     });
+    return null;
   }
 
   // Directions
   function openJoin(e) {
-    fetch('/api/acc', { method: 'get' }).then((res) => {
-      if (res.status === 200) {
-        window.location.replace('/join');
-      } else {
-        fetch('/api/ref', { method: 'get' }).then((res) => {
-          if (res.status === 200) {
-            window.location.replace('/join');
-          } else {
-            window.location.replace('/login');
-          }
+    authCall().then((res) => {
+      if (!res) {
+        call(lut).then(() => {
+          window.location.replace(log);
         });
+        return null;
       }
+      window.location.replace(joi);
+      return null;
     });
   }
 
@@ -122,7 +165,6 @@ function Home() {
   return (
     <>
       <section>
-        <div></div>
         <h1>Welcome!</h1>
         <div>Would you like to create a meeting?</div>
         <button onClick={(e) => openCreate(e.target.value)}>Create a meeting</button><br></br>
@@ -130,7 +172,6 @@ function Home() {
         <button onClick={(e) => openJoin(e.target.value)}>Join</button><br></br>
         <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
-
         <div id="inner"></div>
       </section>
     </>
@@ -138,6 +179,7 @@ function Home() {
 }
 
 function Dashboard() {
+
 
   // Prepare BBB default params
   const [meetingName, setMeetingName] = useState("");
@@ -177,143 +219,72 @@ function Dashboard() {
     }
   }
 
-  // Logout function
-  function logout(e) {
-    fetch('/api/logout', {
-      method: 'get',
-    }).then((response) => {
-      if (response.status === 200) {
-        window.location.replace('/login');
-      }
-    });
-  }
 
   // CreateURL
   function getData(e) {
-    try {
-      // If basicInfo is true we can use the deafult settings later
-      const basicInfo = (document.getElementById("Optional").disabled === true);
-      // Create object
-      const info = {
-        basicInfo,
-        meetingName,
-        attendeePassword,
-        moderatorPassword,
-        welcomeMessage,
-        maxParticipants,
-        record,
-        duration,
-        moderatorOnlyMessage,
-        autoStartRecording,
-        allowStartStopRecording,
-        webcamsOnlyForModerator,
-        bannerText,
-        muteOnStart,
-        allowModsToUnmuteUsers,
-        lockSettingsDisableCam,
-        lockSettingsDisableMic,
-        lockSettingsDisablePrivateChat,
-        lockSettingsDisablePublicChat,
-        lockSettingsDisableNote,
-        lockSettingsLockedLayout,
-        guestPolicy,
-        meetingKeepEvents,
-        endWhenNoModerator,
-        endWhenNoModeratorDelayInMinutes,
-        meetingLayout,
-        learningDashboardEnabled,
-        learningDashboardCleanupDelayInMinutes
-      };
-      // Data check
-      if (meetingName === "" || attendeePassword === "" || moderatorPassword === "") {
-        document.getElementById('inner').innerHTML = "Please fill out the required fields!";
-      } else {
+    const basicInfo = (document.getElementById("Optional").disabled === true);
+    const info = {
+      basicInfo,
+      meetingName,
+      attendeePassword,
+      moderatorPassword,
+      welcomeMessage,
+      maxParticipants,
+      record,
+      duration,
+      moderatorOnlyMessage,
+      autoStartRecording,
+      allowStartStopRecording,
+      webcamsOnlyForModerator,
+      bannerText,
+      muteOnStart,
+      allowModsToUnmuteUsers,
+      lockSettingsDisableCam,
+      lockSettingsDisableMic,
+      lockSettingsDisablePrivateChat,
+      lockSettingsDisablePublicChat,
+      lockSettingsDisableNote,
+      lockSettingsLockedLayout,
+      guestPolicy,
+      meetingKeepEvents,
+      endWhenNoModerator,
+      endWhenNoModeratorDelayInMinutes,
+      meetingLayout,
+      learningDashboardEnabled,
+      learningDashboardCleanupDelayInMinutes
+    };
 
-        fetch('/api/acc', { method: 'get' }).then((res) => {
-          if (res.status === 200) {
-            fetch('/api/isAdmin', { method: 'get' }).then((res) => {
-              if (res.status === 200) {
-                fetch('/api/createurl', {
-                  method: 'post',
-                  headers: { 'content-type': 'application/json' },
-                  body: JSON.stringify(info)
-                }).then(data => {
-                  //console.log(data);
-                  //a szervernek kell hívni az urlt
-                  //teszt teszt 
-                  document.getElementById('inner').innerHTML = data.statusText;
-                  //teszt teszt 
-                });
-              } else {
-                document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-              }
-
-            });
-          } else {
-            fetch('/api/ref', { method: 'get' }).then((res) => {
-              if (res.status === 200) {
-                fetch('/api/isAdmin', { method: 'get' }).then((res) => {
-                  if (res.status === 200) {
-                    fetch('/api/createurl', {
-                      method: 'post',
-                      headers: { 'content-type': 'application/json' },
-                      body: JSON.stringify(info)
-                    }).then(data => {
-                      //console.log(data);
-                      //a szervernek kell hívni az urlt
-                      //teszt teszt 
-                      document.getElementById('inner').innerHTML = data.statusText;
-                      //teszt teszt 
-
-                    });
-                  } else {
-                    document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-                  }
-
-                });
-              } else {
-                window.location.replace('/login');
-              }
-            });
-          }
-        });
-
-        /*
-        // Create URL
-        fetch('/api/createurl', {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(info)
-        // We get the status
-        }).then(function (response) {
-        if (response.status === 200) { // Ok
-        return response.text();
-        } else if (response.status === 403) { // Unauthorized
-        window.location.replace('/login');
-        return null;
-        } else if (response.status === 409) { // Data conflict
-        document.getElementById('inner').innerHTML = "Name already exists";
-        return null;
-        } else { //else
-        return null;
-        }
-        // If we have it, send the URL
-        }).then(function (data) {
-        if (data) {
-        // Take a Long Time to fetch
-        document.getElementById('inner').innerHTML = "Processing";
-        fetch(data, {
-        method: 'post',
-        }).then(() => {
-        // We can join to the meeting
-        window.location.replace('/join');
-        });
-        }
-        });*/
-      }
-    } catch (err) {
-      console.log(err);
+    if (meetingName === "" || attendeePassword === "" || moderatorPassword === "") {
+      document.getElementById('inner').innerHTML = "Please fill out the required fields!";
+      return null;
     }
+
+    authCall().then((res) => {
+      if (!res) {
+        call(lut).then(() => {
+          window.location.replace(log);
+        });
+        return null;
+      }
+      call(isa).then((res) => {
+        if (!res) {
+          document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
+          return null;
+        }
+        document.getElementById('inner').innerHTML = "Loading...";
+        callPostUrl(cre, info).then((res) => {
+          console.log(res);
+          if (res === "false") {
+            document.getElementById('inner').innerHTML = "Error!";
+            return null;
+          }
+          window.location.replace(joi);
+        });
+      });
+    }).catch(err => {
+      console.log(err);
+      document.getElementById('inner').innerHTML = "Error";
+    });
   }
 
   // Create Page
@@ -354,7 +325,9 @@ function Dashboard() {
         <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
         <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+        <div></div>
         <div id="inner"></div>
+        <button onClick={(e) => back(e.target.value)}>Back</button><br></br>
         <div>Optional settings</div>
         <button onClick={(e) => enable(e.target.value)}>Enable optional settings</button>
         <fieldset id="Optional" disabled>
@@ -593,28 +566,23 @@ function Login() {
   // Login function
   function login(e) {
     e.preventDefault();
-    try {
-      // Create object
-      const loginData = {
-        email,
-        password,
-      };
-      // Send Login Data
-      fetch('/api/login', {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(loginData)
-      }).then((data) => {
-        // OK
-        if (data.status === 200) {
-          window.location.replace('/home');
-        } else {
-          document.getElementById('inner').innerHTML = "Incorrect credentials!";
-        }
-      });
-    } catch (err) {
-      console.log(err.data);
-    }
+
+    // Create object
+    const loginData = {
+      email,
+      password,
+    };
+
+    // Send Login Data
+    callPost(lin, loginData).then((res) => {
+      if (!res) {
+        document.getElementById('inner').innerHTML = "Incorrect credentials!";
+        return null;
+      }
+      window.location.replace(hom);
+    }).catch(err => {
+      console.log(err);
+    });
   }
 
   // Login Page
@@ -662,34 +630,28 @@ function SignUp() {
   // Sign up functions
   function signUp(e) {
     e.preventDefault();
-    try {
-      // Create object
-      const signUpData = {
-        firstName,
-        lastName,
-        email,
-        password,
-      };
-      // Check Input
-      if (firstName === "" || lastName === "" || email === "" || password === "") {
-        document.getElementById('inner').innerHTML = "Please fill out all fields!";
-      } else {
-        // Send Input
-        fetch('/api/signUp', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(signUpData)
-        }).then((data) => {
-          if (data.status === 200) {// OK
-            window.location.replace("/login");
-          } else { // Else
-            document.getElementById('inner').innerHTML = "Account already exists please login!";
-          }
-        })
-      }
-    } catch (err) {
-      console.log(err.data);
+    // Create object
+    const signUpData = {
+      firstName,
+      lastName,
+      email,
+      password,
+    };
+    // Check Input
+    if (firstName === "" || lastName === "" || email === "" || password === "") {
+      document.getElementById('inner').innerHTML = "Please fill out all fields!";
+      return null;
     }
+    // Send Input
+    callPost(sig, signUpData).then((res) => { // ToDo ez ide nem lesz jó nem json jön vissza, csak egy sima call lenne de az még nincs implementálva
+      if (!res) {
+        document.getElementById('inner').innerHTML = "Account already exists please login!";
+        return null;
+      }
+      window.location.replace(log);
+    }).catch(err => {
+      console.eroor(err);
+    });
   }
 
   // Sign Up Page
@@ -739,6 +701,7 @@ function SignUp() {
           </label><br></br>
           <input type="submit" />
         </form>
+        <div></div>
         <div id="inner"></div>
       </section>
     </>
@@ -754,59 +717,40 @@ function JoinMeeting() {
   const [fullName, setfullName] = useState("");
   const [password, setPassword] = useState("");
 
-  // Logout function
-  function logout(e) {
-    fetch('/api/logout', {
-      method: 'get',
-    }).then((response) => {
-      if (response.status === 200) {
-        window.location.replace('/login');
-      }
-    });
-  }
-
   // Join meeting function
   function join(e) {
     e.preventDefault();
-    try {
-      // Create Object
-      const joinData = {
-        meetingName,
-        meetingId,
-        fullName,
-        password,
-      };
-      // Check Input
-      if (meetingName === "" || fullName === "" || password === "") {
-        document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
-      } else {
-        // Send Input
-        fetch('/api/join', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(joinData)
-        }).then(function (response) {
-          if (response.status === 200) { // Ok
-            return response.text();
-          } else if (response.status === 403) { // Unauthorized
-            window.location.replace('/login');
-            return null;
-          } else if (response.status === 409) { // Data conflict
-            document.getElementById('inner').innerHTML = "Incorrect meeting ID or Name!";
-            return null;
-          } else { //else
-            return null;
-          }
-          // Join to the meeting
-        }).then(function (data) {
-          if (data) {
-            window.location.replace(data);
-          }
-        });
-      }
-    } catch (err) {
-      console.log(err.data);
+    // Create Object
+    const joinData = {
+      meetingName,
+      meetingId,
+      fullName,
+      password,
+    };
+    // Check Input
+    if (meetingName === "" || fullName === "" || password === "") {
+      document.getElementById('inner').innerHTML = "Please fill out all the non optional fields!";
+      return null;
     }
+
+    authCall().then((res) => {
+      if (!res) {
+        call(lut).then(() => {
+          window.location.replace(log);
+        });
+        return null;
+      }
+      callPostUrl(aoi, joinData).then((res) => {
+        console.log(res);
+        if (res === "false") {
+          document.getElementById('inner').innerHTML = "Incorrect credentials!";
+          return null;
+        }
+        window.location.replace(res);
+        return null;
+      });
+    });
+
   }
 
   // Join meeting page
@@ -858,7 +802,9 @@ function JoinMeeting() {
         </form>
         <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+        <div></div>
         <div id="inner"></div>
+        <button onClick={(e) => back(e.target.value)}>Back</button><br></br>
       </section>
     </>
   );
@@ -868,43 +814,32 @@ function ModeratorSpace() {
 
   const [ID, setID] = useState("");
 
-  // Logout function
-  function logout(e) {
-    fetch('/api/logout', {
-      method: 'get',
-    }).then((response) => {
-      if (response.status === 200) {
-        window.location.replace('/login');
-      }
-    });
-  }
-
   function safe(e) {
     e.preventDefault();
     const asd = { ID };
-    fetch('/api/moderator', {
-      method: 'get',
-    }).then((response) => {
-      if (!response.status === 200) {
-        fetch('/api/logout', {
-          method: 'get',
-        }).then((response) => {
-          if (response.status === 200) {
-            window.location.replace('/login');
+    document.getElementById('inner').innerHTML = "";
+    authCall().then((res) => {
+      console.log(res);
+      if (!res) {
+        call(lut).then(() => {
+          window.location.replace(log);
+        });
+        return null;
+      }
+      call(mod).then((res) => {
+        if (!res) {
+          call(lut).then(() => {
+            window.location.replace(log);
+          });
+          return null;
+        }
+        callPost(set, asd).then((res) => {
+          if (res) {
+            document.getElementById('inner').innerHTML = "Ok!";
           }
         });
-      } else {
-
-        fetch('api/setS', {
-          method: 'post',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(asd)
-        }).then((res) => {
-          document.getElementById('inner').innerHTML = res.status;
-        });
-      }
+      });
     });
-
   }
 
 

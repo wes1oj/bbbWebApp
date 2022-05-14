@@ -9,9 +9,9 @@ const resecret = process.env.KEY_REFRESH;
 const prKey = process.env.KEY_RECF;
 
 // Create AccessToken
-async function createToken(email, firsName, lastName, Role, id) {
-    const privateData = { Email: email, FirsName: firsName, LastName: lastName, Role };
-    const publicData = id;
+async function createToken(email, firsName, lastName, Role, Id) {
+    const privateData = { Email: email, FirsName: firsName, LastName: lastName, Role, Id };
+    const publicData = "";
     const encryption = {
         key: prKey,
         algorithm: 'aes-256-cbc',
@@ -46,7 +46,7 @@ async function createReToken(email) {
         secret: resecret, // to sign the token
         // Default values that will be automatically applied unless specified.
         // algorithm: 'HS256',
-        //expiresIn: '15m',
+        expiresIn: '3h',
         // notBefore: '0s',
         // Other optional values
         key: 'R6MwsxW7mVSBhsQ3Q3pr',// is used as ISS but can be named iss too
@@ -57,7 +57,7 @@ async function createReToken(email) {
         encryption,
         privateData
     );
-    var expirerefresh = Date.now() + 7200000;
+    var expirerefresh = Date.now() + 10000;//7200000;
     // Create rekord
     createRefreshTokenRekord(email, a, expirerefresh);
     return a;
@@ -139,6 +139,7 @@ exports.authRefresh = (req, res) => {
 };
 // Manage logout operation
 exports.logout = (req, res) => {
+
     // Get cookies
     var str = req.headers.cookie;
     // Extract RefreshToken
@@ -166,7 +167,7 @@ exports.isAdmin = (req, res) => {
             str.lastIndexOf(";")
         );
         ExtractUserInfo(tokentrim).then((data) => {
-            console.log(data);
+
             if (data.data.Role == 2) {
                 res.status(200).send("OK");
             } else {
@@ -178,7 +179,7 @@ exports.isAdmin = (req, res) => {
 
 exports.authModerator = (req, res) => {
     if (!req.headers.cookie) {
-        res.status(403);
+        res.status(403).send("Not Allowed")
     } else {
         var str = req.headers.cookie.split(" ")[0];
         var tokentrim = str.substring(
@@ -186,11 +187,11 @@ exports.authModerator = (req, res) => {
             str.lastIndexOf(";")
         );
         ExtractUserInfo(tokentrim).then((data) => {
-            console.log(data);
+
             if (data.data.Role == 3) {
                 res.status(200).send("OK");
             } else {
-                res.status(403);
+                res.status(403).send("Not Allowed")
             }
         });
     }

@@ -3,6 +3,7 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const db = require("./models");
 const app = express();
+const clean = require("./controllers/scheduled.controller");
 
 db.sequelize.sync({ force: true }).then(() => {
   console.log("Drop and re-sync db.");
@@ -32,12 +33,7 @@ function runOnce() {
   userRole.create(Moderator).then(() => {
     console.log("ModeratorRoleAdd");
   });
-  /*
-      FirstName: "Moderator",
-    LastName: "Moderator",
-    Email: "Moderator",
-    Pw: "moderator"
-  */
+
   var pw = "asd";
   bcrypt.hash(pw, 10).then(pwe => {
     const moderator = {

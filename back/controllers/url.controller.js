@@ -8,6 +8,10 @@ const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const secret = process.env.KEY_SECRET;
 const prKey = process.env.KEY_RECF;
+const http = require('http');
+const xml2js = require('xml2js');
+const { Console } = require("console");
+const parser = new xml2js.Parser({ attrkey: "ATTR" });
 
 exports.createurl = (req, res) => {
     // Get inputs
@@ -41,89 +45,121 @@ exports.createurl = (req, res) => {
         learningDashboardCleanupDelayInMinutes } = req.body;
     var cookie = req.headers.cookie;
     findOutUserIdAndElse(cookie).then((user) => {
-        bcrypt.hash(attendeePassword, 10).then((ahpwu) => {
-            var ahpw = url_encode(ahpwu);
-            bcrypt.hash(moderatorPassword, 10).then((mohpwu) => {
-                var mohpw = url_encode(mohpwu);
+        Meeting.findOne({ where: { MeetName: meetingName } }).then(data => {
+            // If the meeting not exists in our database
+            if (data == null) {
+                // We can use the default params 
+                if (basicInfo == true) {
+                    // Create ID
+                    const meetingID = getMeetingID();
+                    // Create Params
+                    var param = createParam([meetingName,
+                        attendeePassword,
+                        moderatorPassword], meetingID);
+                    // Create checksum
+                    hash = cheksum("create" + param);
 
+                    // Create create meeting url
+                    const url = createMeetingURL(param, hash);
 
-                Meeting.findOne({ where: { MeetName: meetingName } }).then(data => {
-                    // If the meeting not exists in our database
-                    if (data == null) {
-                        // We can use the default params 
-                        if (basicInfo == true) {
-                            // Create ID
-                            const meetingID = getMeetingID();
-                            // Create Params
-                            const param = createParam([meetingName,
-                                ahpw,
-                                mohpw], meetingID);
-                            // Create checksum
-                            hash = cheksum("create" + param);
-                            // Create create meeting url
-                            const url = createMeetingURL(param, hash);
-                            // Create meeting recrod
-                            createMeetingRecord(meetingID, meetingName, mohpw, user.Role, user.Id);
-                            // Manual test
-                            var text = "{" + "\"url\"" + ":" + "\"" + url + "\"" + "}";
-                            // Return
-                            res.status(200).send(text);
-                            //Response.redirect(url);
+                    let reqbbb = http.get(url, function (resbbb) {
+                        let data = '';
+                        resbbb.on('data', function (stream) {
+                            data += stream;
+                        });
+                        resbbb.on('end', function () {
+                            parser.parseString(data, function (error, result) {
+                                if (error === null) {
+                                    if (result.response.returncode == "SUCCESS") {
+                                        createMeetingRecord(meetingID, meetingName, moderatorPassword, user.Id).then(() => {
 
-                            //res.status(200).send(json);
-                        } else { // We can't use the default params
-                            // Create ID
-                            const meetingID = getMeetingID();
-                            // Create Param
-                            const param = createOptionalParam([meetingName,
-                                ahpw,
-                                mohpw,
-                                welcomeMessage,
-                                maxParticipants,
-                                record,
-                                duration,
-                                moderatorOnlyMessage,
-                                autoStartRecording,
-                                allowStartStopRecording,
-                                webcamsOnlyForModerator,
-                                bannerText,
-                                muteOnStart,
-                                allowModsToUnmuteUsers,
-                                lockSettingsDisableCam,
-                                lockSettingsDisableMic,
-                                lockSettingsDisablePrivateChat,
-                                lockSettingsDisablePublicChat,
-                                lockSettingsDisableNote,
-                                lockSettingsLockedLayout,
-                                guestPolicy,
-                                meetingKeepEvents,
-                                endWhenNoModerator,
-                                endWhenNoModeratorDelayInMinutes,
-                                meetingLayout,
-                                learningDashboardEnabled,
-                                learningDashboardCleanupDelayInMinutes], meetingID);
-                            // Create cheksum
-                            hash = cheksum("create" + param);
-                            // Create create meeting url
-                            const url = createMeetingURL(param, hash);
-                            // Create meeting record
-                            createMeetingRecord(meetingID, meetingName, moderatorPassword, Id);
-                            // Show the url
-                            //console.log(url);
-                            var text = "{" + "\"url\"" + ":" + "\"" + url + "\"" + "}";
-                            // Return
-                            res.status(200).send(text);
-                            //Response.redirect(url);
-                        }
-                    }
-                    else {
-                        var text = "{" + "\"url\"" + ":" + "\"" + "false" + "\"" + "}";
-                        res.status(409).send(text);
-                    }
-                })
-            });
+                                            res.status(200).send("OK");
+                                        });
+                                    } else {
+                                        console.log(result);
+                                        res.status(400).send("Error");
+                                    }
+                                }
+                                else {
+                                    console.log(error);
+                                    res.status(400).send("Error");
+                                }
+                            });
+                        });
+                    });
+                } else { // We can't use the default params
+                    // Create ID
+                    const meetingID = getMeetingID();
+                    // Create Param
+                    const param = createOptionalParam([meetingName,
+                        attendeePassword,
+                        moderatorPassword,
+                        welcomeMessage,
+                        maxParticipants,
+                        record,
+                        duration,
+                        moderatorOnlyMessage,
+                        autoStartRecording,
+                        allowStartStopRecording,
+                        webcamsOnlyForModerator,
+                        bannerText,
+                        muteOnStart,
+                        allowModsToUnmuteUsers,
+                        lockSettingsDisableCam,
+                        lockSettingsDisableMic,
+                        lockSettingsDisablePrivateChat,
+                        lockSettingsDisablePublicChat,
+                        lockSettingsDisableNote,
+                        lockSettingsLockedLayout,
+                        guestPolicy,
+                        meetingKeepEvents,
+                        endWhenNoModerator,
+                        endWhenNoModeratorDelayInMinutes,
+                        meetingLayout,
+                        learningDashboardEnabled,
+                        learningDashboardCleanupDelayInMinutes], meetingID);
+                    // Create cheksum
+                    hash = cheksum("create" + param);
+                    // Create create meeting url
+                    const url = createMeetingURL(param, hash);
+                    let reqbbb = http.get(url, function (resbbb) {
+                        let data = '';
+                        resbbb.on('data', function (stream) {
+                            data += stream;
+                        });
+                        resbbb.on('end', function () {
+                            parser.parseString(data, function (error, result) {
+
+                                if (error === null) {
+
+                                    if (result.response.returncode == "SUCCESS") {
+                                        createMeetingRecord(meetingID, meetingName, moderatorPassword, user.Id).then(() => {
+
+                                            res.status(200).send("OK");
+                                        });
+
+                                    } else {
+                                        console.log(result);
+                                        res.status(400).send(result);
+                                    }
+                                }
+                                else {
+
+                                    console.log(error);
+                                    res.status(400).send("Error");
+                                }
+                            });
+                        });
+                    });
+                }
+            }
+            else {
+                res.status(409).send(text);
+
+            }
         });
     });
+
 }
 
 function hashpw(a) {
@@ -160,28 +196,15 @@ async function findOutUserIdAndElse(cookie) {
 
 }
 
-// Create meeting
-function createMeetingRecord(meetingID, meetingName, moderatorPassword, Id) {
-    console.log(Id);
-    // Hash the moderator password
-    bcrypt.hash(moderatorPassword, 10).then(data => {
-        var ps = url_encode(data);
-        // Create an object
-        const meeting = {
-            MeetID: meetingID,
-            MeetName: meetingName,
-            MeetPW: ps,
-            MeetModerID: Id
-        };
-        // Create meeting record
-        Meeting.create(meeting)
-            .then(() => {
-                console.log("meeting record created");
-            })
-            .catch(err => {
-                console.log(err);
-            });
-    })
+async function createMeetingRecord(meetingID, meetingName, moderatorPassword, Id) {
+    const meeting = {
+        MeetID: meetingID,
+        MeetName: meetingName,
+        MeetPW: moderatorPassword,
+        MeetModerID: Id
+    };
+    let asd = await Meeting.create(meeting);
+    return asd;
 }
 
 // Create Join URL
@@ -202,7 +225,7 @@ exports.joinurl = (req, res) => {
 
 
     bcrypt.hash(password, 10).then((p) => {
-        password = url_encode(p);
+        var passwordx = p;//url_encode(p);
 
         // If we have the meeting id, than use it
         if (meetingId) {
@@ -212,6 +235,7 @@ exports.joinurl = (req, res) => {
                 if (data == null) {
                     var text = "{" + "\"url\"" + ":" + "\"" + "false" + "\"" + "}";
                     res.status(409).send(text);
+                    return null;
                 }
                 // We find the meeting
                 // Create Params

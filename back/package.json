@@ -9,6 +9,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwt-token-encrypt": "^1.0.4",
     "mysql2": "^2.3.3",
-    "sequelize": "^7.0.0-alpha.3"
+    "sequelize": "^7.0.0-alpha.3",
+    "xml2js": "^0.4.23"
   }
 }

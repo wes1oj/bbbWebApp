@@ -41,6 +41,7 @@ exports.login = (req, res) => {
                 var token = a;
                 auth.createReToken(email).then(b => {
                   var Retoken = b;
+                  console.log(token);
                   res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
                   res.cookie('refreshToken', Retoken, { httpOnly: true });
                   res.status(200).send("Success");

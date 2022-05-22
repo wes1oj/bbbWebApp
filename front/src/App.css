@@ -1,16 +1,61 @@
 div {
-    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 15px 32px;
     background-color: azure;
 }
 
 button {
-    padding: 10px;
-    color: blue;
-    background-color: azure;
+    background-color: #63b963;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
 }
 
-submit {
+#button {
+    background-color: #63b963;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#button:hover {
+    background-color: #203f21;
+    color: white;
+}
+
+
+button:hover {
+    background-color: #203f21;
+    color: white;
+}
+
+.input {
     padding: 10px;
-    color: blue;
-    background-color: azure;
+}
+
+input[type=checkbox] {
+    transform: scale(1.5);
+}
+
+#GuestPolicy {
+    padding: 10px;
+}
+
+#setMeetingLayout {
+    padding: 10px;
+}
+
+#inner {
+    color: rgb(196, 12, 12);
 }

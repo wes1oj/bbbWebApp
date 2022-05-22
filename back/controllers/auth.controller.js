@@ -82,12 +82,16 @@ function createRefreshTokenRekord(email, refreshtoken, expirerefresh) {
 
 
 async function ExtractUserInfo(a) {
+    console.log(a);
     var c = jwt.verify(a, secret);
+    console.log(c);
     const encryption = {
         key: prKey,
         algorithm: 'aes-256-cbc',
     };
+
     const d = jwte.readJWT(a, encryption);
+    console.log(d);
     return d;
 };
 module.exports.ExtractUserInfo = ExtractUserInfo;
@@ -112,6 +116,26 @@ exports.authAccsess = (req, res) => {
     }
 };
 
+exports.authAccsessNext = (req, res, next) => {
+    // Get Cookies
+    if (!req.headers.cookie) {
+        res.status(403).send("cookies not arrived");
+    } else {
+        var str = req.headers.cookie.split(" ")[0];
+        var tokentrim = str.substring(
+            str.indexOf("=") + 1,
+            str.lastIndexOf(";")
+        );
+        jwt.verify(tokentrim, secret, (err) => {
+            if (err) {
+                res.status(403).send("Invalid AccessToken");
+            } else {
+                next();
+            }
+        });
+    }
+};
+
 exports.authRefresh = (req, res) => {
     // Get Cookies
     if (!req.headers.cookie) {
@@ -130,7 +154,7 @@ exports.authRefresh = (req, res) => {
                 User.findOne({ where: { Email: email } }).then(userInfo => {
                     createToken(userInfo.Email, userInfo.FirsName, userInfo.LastName, userInfo.RoleID, userInfo.ID).then(newtoken => {
                         res.cookie('accessToken', newtoken, { httpOnly: true, overwrite: true });
-                        res.send(newtoken);
+                        res.status(200).send(newtoken);
                     });
                 });
             }
@@ -142,6 +166,9 @@ exports.logout = (req, res) => {
 
     // Get cookies
     var str = req.headers.cookie;
+    if (str === null) {
+        res.status(200).send("deleted");
+    }
     // Extract RefreshToken
     var tokentrim = str.substring(
         str.indexOf(";") + 15,
@@ -167,7 +194,7 @@ exports.isAdmin = (req, res) => {
             str.lastIndexOf(";")
         );
         ExtractUserInfo(tokentrim).then((data) => {
-
+            console.log(data);
             if (data.data.Role == 2) {
                 res.status(200).send("OK");
             } else {
@@ -177,7 +204,7 @@ exports.isAdmin = (req, res) => {
     }
 };
 
-exports.authModerator = (req, res) => {
+exports.authModerator = (req, res, next) => {
     if (!req.headers.cookie) {
         res.status(403).send("Not Allowed")
     } else {
@@ -189,7 +216,7 @@ exports.authModerator = (req, res) => {
         ExtractUserInfo(tokentrim).then((data) => {
 
             if (data.data.Role == 3) {
-                res.status(200).send("OK");
+                next();
             } else {
                 res.status(403).send("Not Allowed")
             }

@@ -41,7 +41,7 @@ function runOnce() {
       LastName: "asd",
       Email: "asd",
       Pw: pwe,
-      roleRoleID: 3
+      roleRoleID: 2
     }
     user.create(moderator).then(() => {
       console.log("ModeratorUser");

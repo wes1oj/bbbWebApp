@@ -46,117 +46,140 @@ export default function App() {
   );
 }
 
+const dashboard = '/dashboard';
+const login = '/login';
+const join = '/join';
+const home = '/home';
+const logoutCall = "server/logout";
+const loginCall = "server/login";
+const signUpCall = "server/signUp";
+const access = "server/access";
+const refresh = "server/refresh";
+const accessCreate = "server/accessCreate";
+const accessJoin = "server/accessJoin";
+const accessAdmin = "server/accessAdmin";
+const accessModeratorSet = "server/accessModeratorSet";
+
+//const accessFailed = "server/accessFailed";
 export function logout(e) {
-  fetch(lut, {
+  fetch(logoutCall, {
     method: 'get',
   }).then((response) => {
     if (response.status === 200) {
-      window.location.replace('/login');
+      window.location.replace(login);
     }
   });
 }
 
-
 export function back(e) {
-  window.location.replace('/home');
+  window.location.replace(home);
+}
+
+export async function callAuthGet(direction) {
+  let response = await fetch(direction);
+  if (response.status !== 200) {
+    let secondCall = await fetch(refresh);
+    if (secondCall.status !== 200) {
+      return false;
+    }
+    let thirdCall = await fetch(direction);
+    if (thirdCall.status !== 200) {
+      return false;
+    }
+    return true;
+  }
+  return true;
+}
+
+export async function callAuthPostUrl(direction, data) {
+  let response = await fetch(direction, {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (response.status !== 200) {
+    let secondCall = await fetch(refresh);
+    if (secondCall.status !== 200) {
+      return "false";
+    }
+    let thirdCall = await fetch(direction, {
+      method: 'post',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (thirdCall.status !== 200) {
+      return "false";
+    }
+    let result = await thirdCall.json();
+    return result.url;
+  }
+  let result = await response.json();
+  return result.url;
+}
+
+export async function callAuthPost(direction, data) {
+  let response = await fetch(direction, {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (response.status !== 200) {
+    if (response.status !== 409) {
+      let secondCall = await fetch(refresh);
+      if (secondCall.status !== 200) {
+        return false;
+      }
+      let thirdCall = await fetch(direction, {
+        method: 'post',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (thirdCall.status !== 200) {
+        return false;
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return true;
 }
 
 export async function authCall() {
-  let x = await fetch(acc);
-  console.log(x);
+  let x = await fetch(access);
   if (x.status === 200) {
     return true;
   }
-  let y = fetch(ref);
-  console.log(y);
+  let y = fetch(refresh);
   if (y.status === 200) {
     return true;
   }
   return false;
 }
 
-export async function call(a) {
-  let x = await fetch(a);
-  if (x.status === 200) {
-    return true;
-  }
-  return false;
-}
-
-export async function callPost(a, data) {
-  let x = await fetch(a, {
-    method: 'post',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (x.status === 200) {
-    return true;
-  }
-  return false;
-}
-
-export async function callPostUrl(a, data) {
-  let x = await fetch(a, {
-    method: 'post',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  let y = await x.json();
-  console.log(y);
-  return y.url;
-}
-
-const acc = '/server/acc';
-const isa = '/server/isAdmin';
-const ref = '/server/ref';
-const lut = '/server/logout';
-const lin = '/server/login';
-const cre = '/server/createurl';
-const aoi = '/server/join';
-const sig = '/server/signUp';
-const set = '/server/set';
-const mod = '/server/moderator';
-
-const das = '/dashboard';
-const log = '/login';
-const joi = '/join';
-const hom = '/home';
-
-
 function Home() {
 
   // Directions
   function openCreate(e) {
-    authCall().then((res) => {
-      if (!res) {
-        call(lut).then(() => {
-          window.location.replace(log);
-        });
+    callAuthGet(accessAdmin).then((response) => {
+      console.log(response);
+      if (!response) {
+        document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
         return null;
       }
-      call(isa).then((res) => {
-        if (!res) {
-          document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-          return null;
-        }
-        window.location.replace(das);
-        return null;
-      });
-      return null;
+      window.location.replace(dashboard);
     });
-    return null;
   }
 
   // Directions
   function openJoin(e) {
-    authCall().then((res) => {
-      if (!res) {
-        call(lut).then(() => {
-          window.location.replace(log);
-        });
+    authCall().then((response) => {
+      console.log(response);
+      if (!response) {
+        logout();
         return null;
       }
-      window.location.replace(joi);
+      window.location.replace(join);
       return null;
     });
   }
@@ -166,12 +189,12 @@ function Home() {
     <>
       <section>
         <h1>Welcome!</h1>
-        <div>Would you like to create a meeting?</div>
+        <h3>Would you like to create a meeting?</h3>
         <button onClick={(e) => openCreate(e.target.value)}>Create a meeting</button><br></br>
-        <div>Would you like to join to an existing meeting?</div>
+        <h3>Would you like to join to an existing meeting?</h3>
         <button onClick={(e) => openJoin(e.target.value)}>Join</button><br></br>
-        <div>Would you like to logout?</div>
-        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+        <h3>Would you like to logout?</h3>
+        <button id="button" onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
         <div id="inner"></div>
       </section>
     </>
@@ -179,8 +202,6 @@ function Home() {
 }
 
 function Dashboard() {
-
-
   // Prepare BBB default params
   const [meetingName, setMeetingName] = useState("");
   const [attendeePassword, setAttendeePassword] = useState("");
@@ -218,7 +239,6 @@ function Dashboard() {
       document.getElementById("Optional").disabled = true;
     }
   }
-
 
   // CreateURL
   function getData(e) {
@@ -258,32 +278,14 @@ function Dashboard() {
       document.getElementById('inner').innerHTML = "Please fill out the required fields!";
       return null;
     }
-
-    authCall().then((res) => {
-      if (!res) {
-        call(lut).then(() => {
-          window.location.replace(log);
-        });
+    document.getElementById('inner').innerHTML = "Loading...";
+    callAuthPost(accessCreate, info).then((response) => {
+      console.log(response);
+      if (!response) {
+        document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
         return null;
       }
-      call(isa).then((res) => {
-        if (!res) {
-          document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
-          return null;
-        }
-        document.getElementById('inner').innerHTML = "Loading...";
-        callPostUrl(cre, info).then((res) => {
-          console.log(res);
-          if (res === "false") {
-            document.getElementById('inner').innerHTML = "Error!";
-            return null;
-          }
-          window.location.replace(joi);
-        });
-      });
-    }).catch(err => {
-      console.log(err);
-      document.getElementById('inner').innerHTML = "Error";
+      window.location.replace(join);
     });
   }
 
@@ -292,103 +294,99 @@ function Dashboard() {
     <>
       <section>
         <form>
-          <div>Would you like to create a meeting?</div>
-          <div>Required settings</div>
+          <h1>Would you like to create a meeting?</h1>
+          <h2>Required settings:</h2>
           <label>Name for the meeting:</label><br></br>
-          <input
+          <div><input
             autoComplete="off"
             className="input"
             type="text"
             placeholder="MeetingNname"
             onChange={(e) => setMeetingName(e.target.value)}
             value={meetingName}
-          /><br></br>
+          /><br></br></div>
           <label>Attendee password:</label><br></br>
-          <input
+          <div><input
             autoComplete="off"
             className="input"
             type="text"
             placeholder="AttendeePassword"
             onChange={(e) => setAttendeePassword(e.target.value)}
             value={attendeePassword}
-          /><br></br>
+          /><br></br></div>
           <label>Moderator password:</label><br></br>
-          <input
+          <div><input
             autoComplete="off"
             className="input"
             type="text"
             placeholder="ModeratorPassword"
             onChange={(e) => setModeratorPassword(e.target.value)}
             value={moderatorPassword}
-          /><br></br>
+          /><br></br></div>
         </form>
-        <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
-        <div>Would you like to logout?</div>
-        <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
-        <div></div>
         <div id="inner"></div>
-        <button onClick={(e) => back(e.target.value)}>Back</button><br></br>
-        <div>Optional settings</div>
+        <button onClick={(e) => getData(e.target.value)}>Create meeting</button><br></br>
+        <h2>Optional settings:</h2>
         <button onClick={(e) => enable(e.target.value)}>Enable optional settings</button>
         <fieldset id="Optional" disabled>
           <div>
             <form>
               <label>Welcome message:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="WelcomeMessage"
                 onChange={(e) => setWelcomeMessage(e.target.value)}
                 value={welcomeMessage}
-              /><br></br>
+              /><br></br></div>
               <label>Maximum number of participants:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="120"
                 onChange={(e) => setMaxParticipants(e.target.value)}
                 value={maxParticipants}
-              /><br></br>
+              /><br></br></div>
               <label>Record:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="Record"
                 onChange={(e) => setRecord(e.target.checked)}
                 value={record}
-              /><br></br>
+              /><br></br></div>
               <label>The maximum length (in minutes) for the meeting:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="60"
                 onChange={(e) => setDuration(e.target.value)}
                 value={duration}
-              /><br></br>
+              /><br></br></div>
               <label>Display a message to all moderators in the public chat:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="ModeratorOnlyMessage"
                 onChange={(e) => setModeratorOnlyMessage(e.target.value)}
                 value={moderatorOnlyMessage}
-              /><br></br>
+              /><br></br></div>
               <label>Automatically start recording when first user joins:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="AutoStartRecording"
                 onChange={(e) => setAutoStartRecording(e.target.checked)}
                 value={autoStartRecording}
-              /><br></br>
+              /><br></br></div>
               <label>Allow the user to start/stop recording:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
@@ -396,141 +394,141 @@ function Dashboard() {
                 defaultChecked={"checked"}
                 onChange={(e) => setAllowStartStopRecording(e.target.checked)}
                 value={allowStartStopRecording}
-              /><br></br>
+              /><br></br></div>
               <label>Webcams only for moderator:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="WebcamsOnlyForModerator"
                 onChange={(e) => setWebcamsOnlyForModerator(e.target.checked)}
                 value={webcamsOnlyForModerator}
-              /><br></br>
+              /><br></br></div>
             </form>
             <form>
               <label>Set the banner text:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="BannerText"
                 onChange={(e) => setBannerText(e.target.value)}
                 value={bannerText}
-              /><br></br>
+              /><br></br></div>
               <label>Mute on start:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="MuteOnStart"
                 onChange={(e) => setMuteOnStart(e.target.checked)}
                 value={muteOnStart}
-              /><br></br>
+              /><br></br></div>
               <label>Allow moderator to unmute users:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="AllowModsToUnmuteUsers"
                 onChange={(e) => setAllowModsToUnmuteUsers(e.target.checked)}
                 value={allowModsToUnmuteUsers}
-              /><br></br>
+              /><br></br></div>
               <label>Prevent users from sharing their camera:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsDisableCam"
                 onChange={(e) => setLockSettingsDisableCam(e.target.checked)}
                 value={lockSettingsDisableCam}
-              /><br></br>
+              /><br></br></div>
               <label>Listen only users:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsDisableMic"
                 onChange={(e) => setLockSettingsDisableMic(e.target.checked)}
                 value={lockSettingsDisableMic}
-              /><br></br>
+              /><br></br></div>
               <label>Disable private chats in the meeting:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsDisablePrivateChat"
                 onChange={(e) => setLockSettingsDisablePrivateChat(e.target.checked)}
                 value={lockSettingsDisablePrivateChat}
-              /><br></br>
+              /><br></br></div>
               <label>Disable public chat in the meeting:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsDisablePublicChat"
                 onChange={(e) => setLockSettingsDisablePublicChat(e.target.checked)}
                 value={lockSettingsDisablePublicChat}
-              /><br></br>
+              /><br></br></div>
               <label>Disable notes in the meeting:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsDisableNote"
                 onChange={(e) => setLockSettingsDisableNote(e.target.checked)}
                 value={lockSettingsDisableNote}
-              /><br></br>
+              /><br></br></div>
               <label>Lock the layout in the meeting:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="LockSettingsLockedLayout"
                 onChange={(e) => setLockSettingsLockedLayout(e.target.checked)}
                 value={lockSettingsLockedLayout}
-              /><br></br>
+              /><br></br></div>
               <label>Guest policy:</label><br></br>
-              <select id="GuestPolicy" value={guestPolicy} onChange={(e) => setGuestPolicy(e.target.value)}>
+              <div><select id="GuestPolicy" value={guestPolicy} onChange={(e) => setGuestPolicy(e.target.value)}>
                 <option value="ALWAYS_ACCEPT">ALWAYS_ACCEPT</option>
                 <option value="ALWAYS_DENY">ALWAYS_DENY</option>
                 <option value="ASK_MODERATOR">ASK_MODERATOR</option>
-              </select><br></br>
+              </select><br></br></div>
               <label>If this is true BigBlueButton saves meeting events even if the meeting is not recorded:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="MeetingKeepEvents"
                 onChange={(e) => setMeetingKeepEvents(e.target.checked)}
                 value={meetingKeepEvents}
-              /><br></br>
+              /><br></br></div>
               <label>End when moderator leaves:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
                 placeholder="EndWhenNoModerator"
                 onChange={(e) => setEndWhenNoModerator(e.target.checked)}
                 value={endWhenNoModerator}
-              /><br></br>
+              /><br></br></div>
               <label>End when moderator leaves delay in minutes:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="3"
                 onChange={(e) => setEndWhenNoModeratorDelayInMinutes(e.target.value)}
                 value={endWhenNoModeratorDelayInMinutes}
-              /><br></br>
+              /><br></br></div>
               <label>Meeting layout:</label><br></br>
-              <select id="setMeetingLayout" value={meetingLayout} onChange={(e) => setMeetingLayout(e.target.value)}>
+              <div><select id="setMeetingLayout" value={meetingLayout} onChange={(e) => setMeetingLayout(e.target.value)}>
                 <option value="CUSTOM_LAYOUT">CUSTOM_LAYOUT</option>
                 <option value="SMART_LAYOUT">SMART_LAYOUT</option>
                 <option value="PRESENTATION_FOCUS">PRESENTATION_FOCUS</option>
                 <option value="VIDEO_FOCUS">VIDEO_FOCUS</option>
-              </select><br></br>
+              </select><br></br></div>
               <label>Learning dashboard enabled:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="checkbox"
@@ -538,20 +536,24 @@ function Dashboard() {
                 defaultChecked={"checked"}
                 onChange={(e) => setLearningDashboardEnabled(e.target.checked)}
                 value={learningDashboardEnabled}
-              /><br></br>
+              /><br></br></div>
               <label>Learning dashboard cleanup delay in minutes:</label><br></br>
-              <input
+              <div><input
                 autoComplete="off"
                 className="input"
                 type="text"
                 placeholder="20"
                 onChange={(e) => setLearningDashboardCleanupDelayInMinutes(e.target.value)}
                 value={learningDashboardCleanupDelayInMinutes}
-              /><br></br>
+              /><br></br></div>
             </form>
           </div>
         </fieldset>
-      </section>
+      </section >
+      <div>Would you like to logout?</div>
+      <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
+      <div></div>
+      <button onClick={(e) => back(e.target.value)}>Back</button><br></br>
     </>
   );
 }
@@ -574,14 +576,13 @@ function Login() {
     };
 
     // Send Login Data
-    callPost(lin, loginData).then((res) => {
-      if (!res) {
+    callAuthPost(loginCall, loginData).then((response) => {
+      console.log(response + "A");
+      if (!response) {
         document.getElementById('inner').innerHTML = "Incorrect credentials!";
         return null;
       }
-      window.location.replace(hom);
-    }).catch(err => {
-      console.log(err);
+      window.location.replace(home);
     });
   }
 
@@ -591,26 +592,26 @@ function Login() {
       <section>
         <form onSubmit={login}>
           <label>Enter your email:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="Email"
               onChange={(e) => setEmail(e.target.value)}
               value={email}
-            />
+            /></div>
           </label><br></br>
           <label>Enter your password:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
-            />
+            /></div>
           </label><br></br>
-          <input type="submit" />
+          <input value="Login" id="button" type="submit" />
         </form>
         <div id="inner"></div>
       </section>
@@ -642,15 +643,13 @@ function SignUp() {
       document.getElementById('inner').innerHTML = "Please fill out all fields!";
       return null;
     }
-    // Send Input
-    callPost(sig, signUpData).then((res) => { // ToDo ez ide nem lesz jó nem json jön vissza, csak egy sima call lenne de az még nincs implementálva
-      if (!res) {
+    callAuthPost(signUpCall, signUpData).then((response) => {
+      console.log(response);
+      if (!response) {
         document.getElementById('inner').innerHTML = "Account already exists please login!";
         return null;
       }
-      window.location.replace(log);
-    }).catch(err => {
-      console.eroor(err);
+      window.location.replace(login);
     });
   }
 
@@ -660,48 +659,47 @@ function SignUp() {
       <section>
         <form onSubmit={signUp}>
           <label>Enter your first name:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="first name"
               onChange={(e) => setFirstName(e.target.value)}
               value={firstName}
-            />
+            /></div>
           </label><br></br>
           <label>Enter your last name:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="last name"
               onChange={(e) => setLastName(e.target.value)}
               value={lastName}
-            />
+            /></div>
           </label><br></br>
           <label>Enter your email:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="Email"
               onChange={(e) => setEmail(e.target.value)}
               value={email}
-            />
+            /></div>
           </label><br></br>
           <label>Enter your password:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
-            />
+            /></div>
           </label><br></br>
-          <input type="submit" />
+          <input value="SignUp" id="button" type="submit" />
         </form>
-        <div></div>
         <div id="inner"></div>
       </section>
     </>
@@ -733,24 +731,15 @@ function JoinMeeting() {
       return null;
     }
 
-    authCall().then((res) => {
-      if (!res) {
-        call(lut).then(() => {
-          window.location.replace(log);
-        });
+    callAuthPostUrl(accessJoin, joinData).then((response) => {
+      console.log(response);
+      if (response === "false") {
+        document.getElementById('inner').innerHTML = "Incorrect credentials!";
         return null;
       }
-      callPostUrl(aoi, joinData).then((res) => {
-        console.log(res);
-        if (res === "false") {
-          document.getElementById('inner').innerHTML = "Incorrect credentials!";
-          return null;
-        }
-        window.location.replace(res);
-        return null;
-      });
+      console.log(response);
+      window.location.replace(response);
     });
-
   }
 
   // Join meeting page
@@ -759,50 +748,49 @@ function JoinMeeting() {
       <section>
         <form onSubmit={join}>
           <label>Meeting name:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="Meeting Name"
               onChange={(e) => setmeetingName(e.target.value)}
               value={meetingName}
-            />
+            /></div>
           </label><br></br>
           <label>Meeting id (optional):
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="44c1c8fb5f7...3e1f3e9"
               onChange={(e) => setmeetingId(e.target.value)}
               value={meetingId}
-            />
+            /></div>
           </label><br></br>
           <label>Full name:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="Jhon Doe"
               onChange={(e) => setfullName(e.target.value)}
               value={fullName}
-            />
+            /></div>
           </label><br></br>
           <label>Password:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
-            />
+            /></div>
           </label><br></br>
-          <input type="submit" />
+          <input value="Join" id="button" type="submit" />
         </form>
         <div>Would you like to logout?</div>
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
-        <div></div>
         <div id="inner"></div>
         <button onClick={(e) => back(e.target.value)}>Back</button><br></br>
       </section>
@@ -816,55 +804,37 @@ function ModeratorSpace() {
 
   function safe(e) {
     e.preventDefault();
-    const asd = { ID };
-    document.getElementById('inner').innerHTML = "";
-    authCall().then((res) => {
-      console.log(res);
-      if (!res) {
-        call(lut).then(() => {
-          window.location.replace(log);
-        });
+    const Id = { ID };
+    callAuthPost(accessModeratorSet, Id).then((response) => {
+      console.log(response);
+      if (response === null) {
+        window.location.replace(login);
         return null;
       }
-      call(mod).then((res) => {
-        if (!res) {
-          call(lut).then(() => {
-            window.location.replace(log);
-          });
-          return null;
-        }
-        callPost(set, asd).then((res) => {
-          if (res) {
-            document.getElementById('inner').innerHTML = "Ok!";
-          }
-        });
-      });
+      document.getElementById('inner').innerHTML = "Ok!";
     });
   }
-
 
   return (
     <>
       <section>
         <form onSubmit={safe}>
           <label>ID:
-            <input
+            <div><input
               autoComplete="off"
               className="input"
               type="text"
               placeholder="ID"
               onChange={(e) => setID(e.target.value)}
               value={ID}
-            />
+            /></div>
           </label><br></br>
-          <input type="submit" />
+          <input value="Set" id="button" type="submit" />
+          <div></div>
         </form>
-
         <button onClick={(e) => logout(e.target.value)}>Logout</button><br></br>
         <div id="inner"></div>
       </section>
     </>
-
   );
-
 }

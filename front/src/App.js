@@ -7,6 +7,7 @@ import {
   Link
 } from "react-router-dom";
 
+
 export default function App() {
   return (
     <Router>
@@ -45,6 +46,7 @@ export default function App() {
     </Router>
   );
 }
+
 
 const dashboard = '/dashboard';
 const login = '/login';

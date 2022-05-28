@@ -35,13 +35,11 @@ exports.login = (req, res) => {
                   where: { ReEmail: email }
                 });
               }
-              console.log(data);
               // Create new tokens
               auth.createToken(email, data.FirstName, data.LastName, data.roleRoleID, data.ID).then(a => {
                 var token = a;
                 auth.createReToken(email).then(b => {
                   var Retoken = b;
-                  console.log(token);
                   res.cookie('accessToken', token, { httpOnly: true, overwrite: true });
                   res.cookie('refreshToken', Retoken, { httpOnly: true });
                   res.status(200).send("Success");
@@ -96,10 +94,10 @@ function createUserRekord(password, email, firstName, lastName) {
     // Create user inside the database
     User.create(user)
       .then(() => {
-        console.log("record created");
+        console.log("User Record created");
       })
       .catch(err => {
-        console.log(err + "user DB error")
+        console.log(err + "User DB error")
       });
   });
 };

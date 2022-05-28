@@ -3,7 +3,7 @@ const { Op } = require("sequelize");
 function cleanup() {
     cleanupRetokens();
     cleanupMeetings();
-    console.log("Run");
+    console.log("Scheduled tasks starts");
 }
 
 function cleanupRetokens() {

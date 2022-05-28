@@ -82,16 +82,12 @@ function createRefreshTokenRekord(email, refreshtoken, expirerefresh) {
 
 
 async function ExtractUserInfo(a) {
-    console.log(a);
     var c = jwt.verify(a, secret);
-    console.log(c);
     const encryption = {
         key: prKey,
         algorithm: 'aes-256-cbc',
     };
-
     const d = jwte.readJWT(a, encryption);
-    console.log(d);
     return d;
 };
 module.exports.ExtractUserInfo = ExtractUserInfo;
@@ -194,7 +190,6 @@ exports.isAdmin = (req, res) => {
             str.lastIndexOf(";")
         );
         ExtractUserInfo(tokentrim).then((data) => {
-            console.log(data);
             if (data.data.Role == 2) {
                 res.status(200).send("OK");
             } else {

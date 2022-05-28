@@ -34,17 +34,30 @@ function runOnce() {
     console.log("ModeratorRoleAdd");
   });
 
-  var pw = "asd";
+  var pw = "Moderator";
   bcrypt.hash(pw, 10).then(pwe => {
     const moderator = {
-      FirstName: "asd",
-      LastName: "asd",
-      Email: "asd",
+      FirstName: "Moderator",
+      LastName: "Moderator",
+      Email: "Moderator",
+      Pw: pwe,
+      roleRoleID: 3
+    }
+    user.create(moderator).then(() => {
+      console.log("ModeratorUser created");
+    });
+  });
+  var pw = "Admin";
+  bcrypt.hash(pw, 10).then(pwe => {
+    const admin = {
+      FirstName: "Admin",
+      LastName: "Admin",
+      Email: "Admin",
       Pw: pwe,
       roleRoleID: 2
     }
-    user.create(moderator).then(() => {
-      console.log("ModeratorUser");
+    user.create(admin).then(() => {
+      console.log("AdminUser created");
     });
   });
 }

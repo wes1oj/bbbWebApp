@@ -3,8 +3,8 @@ require('dotenv').config();
 // DB connection configuration
 module.exports = {
   HOST: process.env.HOST,
-  USER: process.env.USER,
-  PASSWORD: "",
+  USER: process.env.US,
+  PASSWORD: process.env.PW,
   DB: process.env.DB,
   dialect: "mysql",
   pool: {
@@ -14,3 +14,4 @@ module.exports = {
     idle: 10000
   }
 };
+

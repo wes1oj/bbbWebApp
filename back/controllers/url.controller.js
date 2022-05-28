@@ -76,12 +76,12 @@ exports.createurl = (req, res) => {
                                             res.status(200).send("OK");
                                         });
                                     } else {
-                                        console.log(result);
+                                        console.log("The Result Was: " + result);
                                         res.status(400).send("Error");
                                     }
                                 }
                                 else {
-                                    console.log(error);
+                                    console.log("Server side error in create meeting url send: " + error);
                                     res.status(400).send("Error");
                                 }
                             });
@@ -139,13 +139,13 @@ exports.createurl = (req, res) => {
                                         });
 
                                     } else {
-                                        console.log(result);
+                                        console.log("The result was: " + result);
                                         res.status(400).send(result);
                                     }
                                 }
                                 else {
 
-                                    console.log(error);
+                                    console.log("Server side error in create meeting url send: " + error);
                                     res.status(400).send("Error");
                                 }
                             });
@@ -259,7 +259,6 @@ exports.joinurl = (req, res) => {
                     res.status(409).send(text);
                 } else {
                     // Meeting inside our db
-                    console.log(data);
                     // Create Join Params
                     const param = joinParam(data.MeetID, [fullName, password]);
                     // Create cheksum

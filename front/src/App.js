@@ -164,7 +164,7 @@ function Home() {
   // Directions
   function openCreate(e) {
     callAuthGet(accessAdmin).then((response) => {
-      console.log(response);
+
       if (!response) {
         document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
         return null;
@@ -176,7 +176,7 @@ function Home() {
   // Directions
   function openJoin(e) {
     authCall().then((response) => {
-      console.log(response);
+
       if (!response) {
         logout();
         return null;
@@ -282,7 +282,7 @@ function Dashboard() {
     }
     document.getElementById('inner').innerHTML = "Loading...";
     callAuthPost(accessCreate, info).then((response) => {
-      console.log(response);
+
       if (!response) {
         document.getElementById('inner').innerHTML = "You Not allowed to create meetings";
         return null;
@@ -579,7 +579,7 @@ function Login() {
 
     // Send Login Data
     callAuthPost(loginCall, loginData).then((response) => {
-      console.log(response + "A");
+
       if (!response) {
         document.getElementById('inner').innerHTML = "Incorrect credentials!";
         return null;
@@ -646,7 +646,7 @@ function SignUp() {
       return null;
     }
     callAuthPost(signUpCall, signUpData).then((response) => {
-      console.log(response);
+
       if (!response) {
         document.getElementById('inner').innerHTML = "Account already exists please login!";
         return null;
@@ -734,12 +734,12 @@ function JoinMeeting() {
     }
 
     callAuthPostUrl(accessJoin, joinData).then((response) => {
-      console.log(response);
+
       if (response === "false") {
         document.getElementById('inner').innerHTML = "Incorrect credentials!";
         return null;
       }
-      console.log(response);
+
       window.location.replace(response);
     });
   }
@@ -808,7 +808,7 @@ function ModeratorSpace() {
     e.preventDefault();
     const Id = { ID };
     callAuthPost(accessModeratorSet, Id).then((response) => {
-      console.log(response);
+
       if (response === null) {
         window.location.replace(login);
         return null;

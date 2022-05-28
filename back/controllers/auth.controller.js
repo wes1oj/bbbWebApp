@@ -209,7 +209,10 @@ exports.authModerator = (req, res, next) => {
             str.lastIndexOf(";")
         );
         ExtractUserInfo(tokentrim).then((data) => {
-
+            console.log("-----------------authModerator-------------------");
+            console.log(data);
+            console.log("-----------------authModerator-------------------");
+            console.log(data.data.Role);
             if (data.data.Role == 3) {
                 next();
             } else {

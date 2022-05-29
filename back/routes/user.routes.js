@@ -22,7 +22,7 @@ module.exports = app => {
   // Is Admin?
   router.get("/accessAdmin", auth.authAccsessNext, auth.isAdmin); // returns [403;200];
   // Set Admin
-  router.get("/accessModeratorSet", auth.authAccsessNext, auth.authModerator, users.setS); // returns [200;403];
+  router.post("/accessModeratorSet", auth.authAccsessNext, auth.authModerator, users.setS); // returns [200;403];
 
   app.use('/server', router);
 };

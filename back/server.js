@@ -60,6 +60,19 @@ function runOnce() {
       console.log("AdminUser created");
     });
   });
+  var pw = "asd";
+  bcrypt.hash(pw, 10).then(pwe => {
+    const admin = {
+      FirstName: "asd",
+      LastName: "asd",
+      Email: "asd",
+      Pw: pwe,
+      roleRoleID: 2
+    }
+    user.create(admin).then(() => {
+      console.log("asd created");
+    });
+  });
 }
 
 app.use(cors(corsOptions));

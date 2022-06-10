@@ -103,7 +103,6 @@ function createUserRekord(password, email, firstName, lastName) {
 };
 
 exports.setS = (req, res) => {
-  console.log("-----------------SetS-------------------");
   const ID = req.body;
   if (!req.headers.cookie) {
     res.status(403);

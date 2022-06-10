@@ -60,17 +60,17 @@ function runOnce() {
       console.log("AdminUser created");
     });
   });
-  var pw = "asd";
+  var pw = "User";
   bcrypt.hash(pw, 10).then(pwe => {
     const admin = {
-      FirstName: "asd",
-      LastName: "asd",
-      Email: "asd",
+      FirstName: "User",
+      LastName: "User",
+      Email: "User",
       Pw: pwe,
       roleRoleID: 2
     }
     user.create(admin).then(() => {
-      console.log("asd created");
+      console.log("User created");
     });
   });
 }

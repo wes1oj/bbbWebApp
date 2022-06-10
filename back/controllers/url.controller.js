@@ -154,7 +154,7 @@ exports.createurl = (req, res) => {
                 }
             }
             else {
-                res.status(409).send(text);
+                res.status(409).send("Error");
 
             }
         });
